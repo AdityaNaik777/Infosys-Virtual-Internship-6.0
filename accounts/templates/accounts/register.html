@@ -1,0 +1,467 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Account — AI Quiz Hub</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* GLOBAL */
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: #f7f7fb;
+      }
+
+      /* MAIN SPLIT */
+      .split {
+        display: flex;
+        /* FIX: Use min-height to allow content to extend past viewport */
+        min-height: 100vh;
+        /* FIX: Removed overflow: hidden; */
+      }
+
+      /* LEFT PANEL */
+      .left {
+        flex: 1.1;
+        padding: 60px;
+        background: linear-gradient(135deg, #4f46e5, #9333ea);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        position: relative;
+      }
+
+      /* Wrapper to stabilize layout */
+      .content-wrapper {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .left h1 {
+        font-family: "Orbitron", sans-serif;
+        font-size: 64px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        line-height: 1.1;
+        letter-spacing: -2px;
+        text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        margin-top: 0;
+      }
+
+      .left p {
+        font-size: 20px;
+        opacity: 0.9;
+        font-weight: 400;
+        margin-top: 0;
+      }
+
+      /* --- FIXED HEIGHT CONTAINER (PREVENTS JUMPING) --- */
+      .typewriter-container {
+        margin-top: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        /* STRICT HEIGHT: Prevents the parent flexbox from resizing */
+        height: 180px;
+        width: 100%;
+      }
+
+      .typewriter-line {
+        font-family: "Orbitron", sans-serif;
+        font-weight: 600;
+        font-size: 32px;
+        color: rgba(255, 255, 255, 0.98);
+        white-space: nowrap;
+        overflow: hidden;
+        display: block;
+        width: 0ch;
+        opacity: 0;
+        border-right: 3px solid rgba(255, 255, 255, 0.9);
+        box-sizing: content-box;
+        padding-right: 6px;
+        height: 40px; /* Fixed line height */
+      }
+
+      /* ANIMATIONS */
+      @keyframes typing {
+        from {
+          width: 0ch;
+        }
+        to {
+          width: calc(var(--chars) * 1ch);
+        }
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          border-color: rgba(255, 255, 255, 0.95);
+        }
+        50.1%,
+        100% {
+          border-color: transparent;
+        }
+      }
+
+      /* RIGHT PANEL */
+      .right {
+        flex: 1;
+        display: flex;
+        /* FIX: Align to top to prevent form card from being cut off */
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px;
+        /* FIX: Allow scrolling within the right panel */
+        overflow-y: auto;
+      }
+
+      .card {
+        background: white;
+        width: 100%;
+        max-width: 420px;
+        padding: 40px;
+        border-radius: 18px;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+        /* FIX: Add top margin to center if the form is short, but flex-start ensures it works if long */
+        margin-top: 10vh; /* Provides some space from the top */
+        margin-bottom: 40px; /* Ensures there's space for scrolling past the footer */
+      }
+
+      .card h2 {
+        margin-top: 0;
+        font-size: 26px;
+        color: #333;
+        margin-bottom: 20px;
+        font-family: "Inter", sans-serif;
+      }
+
+      label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 6px;
+        display: block;
+      }
+      
+      /* Target the select elements as well for styling consistency */
+      input, select {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 15px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        outline: none;
+        transition: 0.25s;
+        box-sizing: border-box;
+      }
+
+      input:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 3px rgba(79, 70, 229, 0.4);
+      }
+
+      /* Primary Button */
+      .btn-primary {
+        width: 100%;
+        padding: 13px;
+        background: #4f46e5;
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: 0.25s;
+        font-weight: 600;
+      }
+
+      .btn-primary:hover {
+        background: #3e39c7;
+      }
+
+      /* --- GOOGLE BUTTON & DIVIDER --- */
+
+      .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: #888;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #eee;
+      }
+
+      .divider:not(:empty)::before {
+        margin-right: 10px;
+      }
+      .divider:not(:empty)::after {
+        margin-left: 10px;
+      }
+
+      .btn-google {
+        width: 100%;
+        padding: 12px;
+        background: white;
+        color: #333;
+        font-size: 15px;
+        font-weight: 500;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: 0.2s;
+        text-decoration: none; /* If using 'a' tag */
+      }
+
+      .btn-google:hover {
+        background-color: #f9f9f9;
+        border-color: #ccc;
+      }
+
+      .btn-google img,
+      .btn-google svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Footer Link */
+      .footer-text {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #666;
+        text-align: center;
+      }
+
+      .footer-text a {
+        color: #4f46e5;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .footer-text a:hover {
+        text-decoration: underline;
+      }
+
+      /* Basic styling for errors */
+      .error-text {
+        color: #ef4444; /* red-500 */
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 900px) {
+        .split {
+          flex-direction: column;
+          height: auto;
+          overflow-y: auto;
+        }
+        .left {
+          padding: 40px 25px;
+          height: auto;
+          text-align: center;
+          align-items: center;
+          min-height: 400px;
+        }
+        .left h1 {
+          font-size: 42px;
+        }
+        .typewriter-container {
+          align-items: center;
+          height: 150px; /* Smaller height for mobile */
+        }
+        .typewriter-line {
+          font-size: 24px;
+          height: 30px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="split">
+      <div class="left">
+        <div class="content-wrapper">
+          <h1>AI Quiz Hub</h1>
+          <p>Learn smart. Test smarter.</p>
+
+          <div class="typewriter-container" aria-hidden="true">
+            <div
+              class="typewriter-line"
+              data-text="✨ Topic-wise quizzes"
+              id="tw-line-1"
+            ></div>
+            <div
+              class="typewriter-line"
+              data-text="🤖 AI-generated questions"
+              id="tw-line-2"
+            ></div>
+            <div
+              class="typewriter-line"
+              data-text="📊 Instant insights"
+              id="tw-line-3"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="card">
+          <h2>Create Account</h2>
+
+          <form method="post" enctype="multipart/form-data"> 
+            {% csrf_token %}
+
+            <label>Username</label>
+            {{ form.username }}
+            <div class="error-text">{{ form.username.errors }}</div>
+
+            <label style="margin-top: 14px">Email Address</label>
+            {{ form.email }}
+            <div class="error-text">{{ form.email.errors }}</div>
+
+            <label style="margin-top: 14px">Full Name (Optional)</label>
+            {{ form.full_name }}
+            <div class="error-text">{{ form.full_name.errors }}</div>
+
+            <label style="margin-top: 14px">Password</label>
+            {{ form.password1 }}
+            <div class="error-text">{{ form.password1.errors }}</div>
+
+            <label style="margin-top: 14px">Confirm Password</label>
+            {{ form.password2 }}
+            <div class="error-text">{{ form.password2.errors }}</div>
+
+            <label style="margin-top: 14px"
+              >Preferred Categories (e.g., Academic, Entertainment)</label
+            >
+            {{ form.preferred_categories }}
+            <div class="error-text">{{ form.preferred_categories.errors }}</div>
+
+            <label style="margin-top: 14px"
+              >Preferred Difficulty (L, M, H)</label
+            >
+            {{ form.preferred_difficulty }}
+            <div class="error-text">{{ form.preferred_difficulty.errors }}</div>
+
+            <label style="margin-top: 14px">Avatar Path URL (Optional)</label>
+            {{ form.avatar_path }}
+            <div class="error-text">{{ form.avatar_path.errors }}</div>
+
+            {% if form.non_field_errors %}
+            <div class="error-text" style="margin-top: 10px">
+              {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn-primary">Create Account</button>
+          </form>
+
+          <div class="divider">OR</div>
+          <a href="/accounts/google/login/?process=login" class="btn-google">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display: block; width: 20px; height: 20px;">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+            </svg>
+            Continue with Google
+          </a>
+
+          <div class="footer-text">
+            Already have an account?
+            <a href="{% url 'accounts:login' %}">Sign in</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const lines = [
+          document.getElementById("tw-line-1"),
+          document.getElementById("tw-line-2"),
+          document.getElementById("tw-line-3"),
+        ];
+
+        lines.forEach((el) => {
+          const txt = el.getAttribute("data-text") || "";
+          el.textContent = txt;
+          const charCount = Math.max(1, txt.length + 2);
+          el.style.setProperty("--chars", charCount);
+        });
+
+        const msPerChar = 100;
+        const pauseAfterLine = 700;
+        const pauseAfterAll = 1500;
+
+        function sleep(ms) {
+          return new Promise((res) => setTimeout(res, ms));
+        }
+
+        async function runLoop() {
+          while (true) {
+            for (let i = 0; i < lines.length; i++) {
+              const el = lines[i];
+              const txt = el.textContent || "";
+              const chars = Math.max(1, txt.length + 2);
+              const duration = chars * msPerChar;
+
+              el.style.opacity = "1";
+              el.style.width = "0ch";
+              el.style.borderRight = "3px solid rgba(255,255,255,0.95)";
+              el.style.animation = `typing ${duration}ms steps(${chars}) forwards, blink .8s step-end infinite`;
+
+              await sleep(duration);
+              await sleep(pauseAfterLine);
+
+              el.style.animation = "none";
+              el.style.borderRight = "none";
+              el.style.width = `calc(${chars}ch)`;
+            }
+
+            await sleep(pauseAfterAll);
+
+            for (let el of lines) {
+              el.style.transition = "width .28s ease, opacity .28s ease";
+              el.style.opacity = "0";
+              el.style.width = "0ch";
+              el.style.borderRight = "3px solid rgba(255,255,255,0.95)";
+            }
+
+            await sleep(380);
+
+            lines.forEach((el) => (el.style.transition = "none"));
+            await sleep(120);
+          }
+        }
+
+        runLoop();
+      });
+    </script>
+  </body>
+</html>

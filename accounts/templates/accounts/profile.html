@@ -1,0 +1,170 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Profile — AI Quiz Hub</title>
+  <style>
+    :root{
+      --bg:#071025; --card:#081226; --muted:#9aa4b2; --accent:#22c55e; --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; min-height:100vh; background:linear-gradient(180deg,#041025,#071225); color:#eaf0f9; padding:28px; display:flex; justify-content:center}
+    .wrap{width:100%; max-width:980px}
+    .top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px}
+    .card{background:var(--card); border-radius:14px; padding:20px; box-shadow: 0 10px 36px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03)}
+    .profile-row{display:grid; grid-template-columns:220px 1fr; gap:20px; align-items:start}
+    .avatar-box{display:flex; flex-direction:column; gap:10px; align-items:center}
+    .avatar{
+      width:160px; height:160px; border-radius:14px; background:linear-gradient(135deg,var(--accent),#06b6d4);
+      display:grid; place-items:center; font-weight:700; color:#072023; overflow:hidden;
+    }
+    .avatar img{width:100%; height:100%; object-fit:cover; display:block}
+    label.file{
+      display:inline-block; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.02);
+      cursor:pointer; border:1px solid rgba(255,255,255,0.03); font-size:13px;
+    }
+    form .field{margin-bottom:12px}
+    label{display:block; color:var(--muted); font-size:13px; margin-bottom:6px}
+    input[type="text"], input[type="email"], textarea{
+      width:100%; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,0.02); color:inherit; border:1px solid rgba(255,255,255,0.03)
+    }
+    textarea{min-height:80px; resize:vertical}
+    .actions{display:flex; gap:10px; margin-top:8px}
+    .btn{padding:10px 14px; border-radius:10px; font-weight:600; border:none; cursor:pointer; background:linear-gradient(90deg,var(--accent),#06b6d4); color:#072023}
+    .btn.ghost{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03)}
+    small.muted{color:var(--muted); display:block; margin-top:6px}
+    @media (max-width:840px){ .profile-row{grid-template-columns:1fr} .avatar{width:120px;height:120px} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h2 style="margin:0">Your profile</h2>
+      <div style="display:flex; gap:8px; align-items:center">
+        <a class="btn ghost" href="{% url 'accounts:logout' %}">Logout</a>
+      </div>
+    </div>
+
+    <div class="card">
+      {% if messages %}
+        <div style="margin-bottom:12px">
+          {% for message in messages %}
+            <div style="padding:8px; border-radius:8px; background:rgba(34,197,94,0.04); color:var(--muted)">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="profile-row">
+        <div class="avatar-box">
+          <div class="avatar" id="avatarPreview">
+            {% if request.user.profile.avatar %}
+              <img src="{{ request.user.profile.avatar.url }}" alt="avatar"/>
+            {% else %}
+              {{ request.user.username|slice:":1"|upper }}
+            {% endif %}
+          </div>
+
+          <form id="avatarForm" method="post" enctype="multipart/form-data" style="width:100%;">
+            {% csrf_token %}
+            <label class="file">
+              Change avatar
+              <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display:none">
+            </label>
+            <small class="muted">PNG / JPG, max 2MB recommended.</small>
+          </form>
+        </div>
+
+        <div>
+          <form method="post" enctype="multipart/form-data" id="profileForm">
+            {% csrf_token %}
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+              <div class="field">
+                {{ u_form.first_name.label_tag }}
+                {{ u_form.first_name }}
+                {{ u_form.first_name.errors }}
+              </div>
+              <div class="field">
+                {{ u_form.last_name.label_tag }}
+                {{ u_form.last_name }}
+                {{ u_form.last_name.errors }}
+              </div>
+            </div>
+
+            <div class="field">
+              {{ u_form.email.label_tag }}
+              {{ u_form.email }}
+              {{ u_form.email.errors }}
+            </div>
+
+            <div class="field">
+              {{ p_form.full_name.label_tag }}
+              {{ p_form.full_name }}
+              {{ p_form.full_name.errors }}
+            </div>
+
+            <div class="field">
+              {{ p_form.bio.label_tag }}
+              {{ p_form.bio }}
+              {{ p_form.bio.errors }}
+            </div>
+
+            <!-- include the avatar input inside the main form as well so Django picks it up -->
+            <div style="display:none">
+              {{ p_form.avatar }}
+            </div>
+
+            <div class="actions">
+              <button class="btn" type="submit">Update profile</button>
+              <a class="btn ghost" href="{% url 'accounts:profile' %}">Cancel</a>
+            </div>
+
+            <small class="muted" style="display:block; margin-top:10px">Tip: set your display name and a short bio so quizzes feel personalized.</small>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // avatar preview logic: when file picked, preview image in .avatar and also copy file into main form file input
+  (function(){
+    const fileInput = document.getElementById('id_avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const mainForm = document.getElementById('profileForm');
+
+    // forward file selection to the hidden file input inside the main form (p_form.avatar)
+    // find the hidden avatar input (Django rendered) inside page
+    const hiddenAvatar = document.querySelector('input[type=file][name$="avatar"]') || null;
+
+    document.querySelector('.file').addEventListener('click', function(e){
+      // trigger the visible file input
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(e){
+      const file = this.files && this.files[0];
+      if(!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        alert("Image is large — please choose a file under 4MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        avatarPreview.innerHTML = '<img src="'+ev.target.result+'" alt="avatar"/>';
+      }
+      reader.readAsDataURL(file);
+
+      // if there is a hidden avatar input inside main form, copy file using DataTransfer
+      if (hiddenAvatar) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        hiddenAvatar.files = dt.files;
+      }
+    });
+  })();
+</script>
+</body>
+</html>

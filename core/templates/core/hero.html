@@ -1,0 +1,106 @@
+<!-- HERO SECTION -->
+{% load static %}
+
+<section class="container py-5">
+  <div class="row align-items-center">
+    <!-- LEFT TEXT AREA -->
+    <div class="col-md-6">
+      <h1 class="fw-bold mb-3" data-aos="fade-up">
+        Learn Smart. Test Smarter.
+      </h1>
+
+      <p class="lead text-muted" data-aos="fade-up" data-aos-delay="120">
+        A modern AI-powered quiz platform designed for
+        <strong>students</strong> and <strong>professionals</strong>.
+      </p>
+
+      <div class="mt-4" data-aos="fade-up" data-aos-delay="240">
+        <a
+          href="{% url 'accounts:register' %}"
+          class="btn btn-primary btn-lg btn-cta"
+        >
+          Get Started
+        </a>
+
+        <a
+          href="{% url 'accounts:login' %}"
+          class="btn btn-outline-primary btn-lg ms-2 btn-cta"
+        >
+          Login
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="d-flex gap-4 mt-5" data-aos="fade-up" data-aos-delay="360">
+        <div>
+          <div class="counter" data-target="1250">0</div>
+          <div class="text-muted small">Quizzes Delivered</div>
+        </div>
+        <div>
+          <div class="counter" data-target="450">0</div>
+          <div class="text-muted small">Active Users</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT ILLUSTRATION + FLOATING SMALL ANIMATION -->
+    <!-- RIGHT ILLUSTRATION -->
+    <div
+      class="col-md-6 text-center mt-4 mt-md-0 position-relative"
+      data-aos="zoom-in"
+      style="min-height: 420px"
+    >
+      <!-- Lottie container -->
+      <div
+        id="hero-lottie"
+        style="
+          width: 420px;
+          height: 420px;
+          margin: 0 auto;
+          z-index: 1;
+          position: relative;
+        "
+      ></div>
+
+      <!-- Small floating AI Icon Animation (moved inside same container) -->
+      <lord-icon
+        src="https://cdn.lordicon.com/wxnxiano.json"
+        trigger="loop"
+        delay="2000"
+        style="
+          width: 80px;
+          height: 80px;
+          position: absolute;
+          right: 15%;
+          top: 18%;
+          z-index: 2;
+          pointer-events: none;
+        "
+      >
+      </lord-icon>
+    </div>
+
+    <!-- Lottie loader (keep before your lottie init) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // debug helper: log when script runs
+        console.log(
+          "Initializing lottie animation, container exists?",
+          !!document.getElementById("hero-lottie")
+        );
+        lottie.loadAnimation({
+          container: document.getElementById("hero-lottie"),
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path: "{% static 'checklist.json'%}",
+        });
+      });
+    </script>
+
+    <!-- Lordicon Loader — move into head if possible, or keep here but after lord-icon element -->
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
+  </div>
+</section>

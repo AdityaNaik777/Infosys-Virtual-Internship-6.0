@@ -1,0 +1,36 @@
+
+Take input from user: select how many questions u want
+can go through category wise
+
+add category as well
+
+add timer as well to each mcq 30min - easy, 1 minute each - medium, 1.5min - hard
+resume quiz
+session management
+user register,auth,login add validations
+responsive msg on left side
+
+My-Point: To recommend the users what are the areas they can improve 
+		  And based on that our ai (gpt through api key can suggest further quiz questions)
+
+Suggestions:
+Sai: we can invite friends to give the quiz then can tell who has scored more marks likewise can have a 
+	 competitive culture, enabling user to learn in an engaging way
+
+Work Done - 03-12-2025
+erd: https://mermaid.live/edit#pako:eNqlVEtz2jAQ_isanQmJCcbYt06bTJh2JikJh2aY0SzW2lZiS44kU57_PTIEiIH0Ul2s3e_bp3a9pLHiSCOK-oeAVEMxlsSdb6OnOzZ6vBmS1eriYrUi9Z09DO9vB79uSEQyMOeIakl-jwbP7G7w-HQ__OOIY2rhFc2YbukNN8utrj5CWiI4efjZVFUGNXP620_6Keg4A02SKs-ZhAIPEAeLhKvJKTlFyVEf9BZnlkyEOmXCFCx8Yr4YJUmpMUGNMkbTTNAqCzl7q8RigYbVpcpzhFhpjbE9B_3VSqYHIMkVWJcEakiRGWeITStjNcJrs2YrCiQ5GMsgtmKKDD5Crbefxpv8X9djFy5Ven6KmGryNchFkoi4yu38qJrTAguYHde9D2HBVsYpxm5sizJHi_xSSFZqlWo05hImILmSyHfztn_BtwqNFUoaZiSUJlP2TAudf-1c7tvXABMhhcmO0DphXmmoXTODsZLcNFp_2I9_931XYt375lDvECxA5Gfyqi_sRYm66i-mIlepkPu0aIumWnAaWV1hixaonWcn0k2GbmEzdPFpvbscE3CPVndz7cxKkM9KFTtLrao02wlVWcf8-InsGZu1-64qaWnkXYfBxgeNlnTm5F7YDjp9v-dfdbpBcNW_btE5jTp-u-f3g27f6wb9nh94nXWLLjZhvfaV5_l-p9sNwtAL-2GwfgcownRj
+
+03-12-2025
+academics
+10,12,engg,medical,
+
+04-12-2025
+dbdigram-ai
+
+9-12-2025
+Add Badges to User	
+
+10-12-2025
+milestone 2 api integration
+milestone 3: work on ui now to make attractive
+in drive link : only add screenshots
