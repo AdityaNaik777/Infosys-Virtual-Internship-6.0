@@ -102,8 +102,8 @@ DATABASES = {
   'default': {
     'ENGINE': 'django.db.backends.mysql',
     'NAME': 'quizdb',
-    'USER': 'quizuser',
-    'PASSWORD': 'quizpass',
+    'USER': 'root',
+    'PASSWORD': 'gani@sql',
     'HOST': '127.0.0.1',
     'PORT': '3306',
     'OPTIONS': {

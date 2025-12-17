@@ -1,0 +1,312 @@
+[
+{
+  "model": "quizzes.category",
+  "pk": 4,
+  "fields": {
+    "name": "Academics",
+    "description": "This category covers Academic - Oriented subjects related to Education ,Professional Studies.",
+    "created_at": "2025-12-17T05:32:14.615Z",
+    "updated_at": "2025-12-17T05:32:14.615Z"
+  }
+},
+{
+  "model": "quizzes.category",
+  "pk": 5,
+  "fields": {
+    "name": "Entertainment",
+    "description": "This Category includes Topics Related To Media , Music",
+    "created_at": "2025-12-17T05:33:38.351Z",
+    "updated_at": "2025-12-17T05:33:38.351Z"
+  }
+},
+{
+  "model": "quizzes.category",
+  "pk": 6,
+  "fields": {
+    "name": "General Knowledge(GK)",
+    "description": "This area focus on general awareness , current events and static knowledge",
+    "created_at": "2025-12-17T05:34:47.376Z",
+    "updated_at": "2025-12-17T05:34:47.376Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 10,
+  "fields": {
+    "category": 4,
+    "name": "Engineering",
+    "level": 1,
+    "parent_subcat": null,
+    "is_leaf": false,
+    "description": "Engineering covers technical and professional subjects related to computer science, artificial intelligence, and core engineering concepts",
+    "created_at": "2025-12-17T05:36:21.204Z",
+    "updated_at": "2025-12-17T05:36:21.204Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 11,
+  "fields": {
+    "category": 4,
+    "name": "Medical",
+    "level": 1,
+    "parent_subcat": null,
+    "is_leaf": false,
+    "description": "Medical includes topics related to human health, anatomy, physiology, and awareness of diseases and healthcare.",
+    "created_at": "2025-12-17T05:36:55.749Z",
+    "updated_at": "2025-12-17T05:38:35.055Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 12,
+  "fields": {
+    "category": 5,
+    "name": "Music",
+    "level": 1,
+    "parent_subcat": null,
+    "is_leaf": false,
+    "description": "Music includes different genres and styles that reflect cultural expression, creativity, and entertainment.",
+    "created_at": "2025-12-17T05:37:15.164Z",
+    "updated_at": "2025-12-17T05:38:54.613Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 13,
+  "fields": {
+    "category": 5,
+    "name": "Movies",
+    "level": 1,
+    "parent_subcat": null,
+    "is_leaf": false,
+    "description": "Movies include various film genres that entertain, inform, and reflect storytelling through cinema.",
+    "created_at": "2025-12-17T05:37:58.522Z",
+    "updated_at": "2025-12-17T05:38:48.377Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 14,
+  "fields": {
+    "category": 6,
+    "name": "Current Affairs",
+    "level": 1,
+    "parent_subcat": null,
+    "is_leaf": false,
+    "description": "Current Affairs focuses on recent national and international events important for awareness and examinations.",
+    "created_at": "2025-12-17T05:39:28.397Z",
+    "updated_at": "2025-12-17T05:39:28.397Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 15,
+  "fields": {
+    "category": 6,
+    "name": "Static GK",
+    "level": 1,
+    "parent_subcat": null,
+    "is_leaf": false,
+    "description": "Static GK includes timeless facts and concepts that do not change frequently, such as history and basic sciences.",
+    "created_at": "2025-12-17T05:39:53.225Z",
+    "updated_at": "2025-12-17T05:39:53.225Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 16,
+  "fields": {
+    "category": 4,
+    "name": "CS",
+    "level": 2,
+    "parent_subcat": 10,
+    "is_leaf": false,
+    "description": "This topic covers the fundamentals of Computer Science",
+    "created_at": "2025-12-17T05:42:23.381Z",
+    "updated_at": "2025-12-17T05:48:46.108Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 17,
+  "fields": {
+    "category": 4,
+    "name": "AIML",
+    "level": 2,
+    "parent_subcat": 10,
+    "is_leaf": true,
+    "description": "This topic covers the basics of Artificial Intelligence and Machine Learning including algorithms, models, and real-world applications.",
+    "created_at": "2025-12-17T05:49:14.447Z",
+    "updated_at": "2025-12-17T05:49:14.447Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 18,
+  "fields": {
+    "category": 4,
+    "name": "Human Anatomy & Physiology",
+    "level": 2,
+    "parent_subcat": 11,
+    "is_leaf": true,
+    "description": "This topic explains the structure and functioning of the human body systems and their physiological processes.",
+    "created_at": "2025-12-17T05:50:12.528Z",
+    "updated_at": "2025-12-17T05:50:12.528Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 19,
+  "fields": {
+    "category": 4,
+    "name": "Diseases & Health Awareness",
+    "level": 2,
+    "parent_subcat": 11,
+    "is_leaf": true,
+    "description": "This topic provides knowledge about common diseases, their causes, prevention, and general health awareness.",
+    "created_at": "2025-12-17T05:50:32.512Z",
+    "updated_at": "2025-12-17T05:50:32.512Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 20,
+  "fields": {
+    "category": 4,
+    "name": "OS (Operating Systems)",
+    "level": 3,
+    "parent_subcat": 16,
+    "is_leaf": true,
+    "description": "This topic covers the fundamentals of operating systems including process management, memory management, file systems, and scheduling.",
+    "created_at": "2025-12-17T05:51:21.761Z",
+    "updated_at": "2025-12-17T05:51:21.762Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 21,
+  "fields": {
+    "category": 4,
+    "name": "Python",
+    "level": 1,
+    "parent_subcat": 16,
+    "is_leaf": true,
+    "description": "This topic focuses on Python programming concepts such as syntax, data structures, functions, and basic problem-solving.",
+    "created_at": "2025-12-17T05:51:41.070Z",
+    "updated_at": "2025-12-17T05:51:41.070Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 22,
+  "fields": {
+    "category": 5,
+    "name": "Rap",
+    "level": 2,
+    "parent_subcat": 12,
+    "is_leaf": true,
+    "description": "This topic explores rap music, its rhythm, lyrics, cultural significance, and evolution.",
+    "created_at": "2025-12-17T05:54:51.791Z",
+    "updated_at": "2025-12-17T05:54:51.791Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 23,
+  "fields": {
+    "category": 5,
+    "name": "Classical",
+    "level": 2,
+    "parent_subcat": 12,
+    "is_leaf": true,
+    "description": "This topic focuses on classical music traditions, instruments, and foundational musical theory.",
+    "created_at": "2025-12-17T05:55:12.783Z",
+    "updated_at": "2025-12-17T05:55:12.783Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 24,
+  "fields": {
+    "category": 5,
+    "name": "Action",
+    "level": 2,
+    "parent_subcat": 13,
+    "is_leaf": true,
+    "description": "This topic includes action movies characterized by fast-paced sequences, stunts, and thrilling storylines.",
+    "created_at": "2025-12-17T05:55:38.927Z",
+    "updated_at": "2025-12-17T05:55:38.927Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 25,
+  "fields": {
+    "category": 5,
+    "name": "Drama",
+    "level": 2,
+    "parent_subcat": 13,
+    "is_leaf": true,
+    "description": "This topic covers drama movies that focus on emotional storytelling, character development, and realistic narratives.",
+    "created_at": "2025-12-17T05:56:05.548Z",
+    "updated_at": "2025-12-17T05:56:05.548Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 26,
+  "fields": {
+    "category": 6,
+    "name": "National",
+    "level": 2,
+    "parent_subcat": 14,
+    "is_leaf": true,
+    "description": "This topic covers recent national events, government policies, and important developments within the country.",
+    "created_at": "2025-12-17T05:57:11.967Z",
+    "updated_at": "2025-12-17T05:57:11.967Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 27,
+  "fields": {
+    "category": 6,
+    "name": "International",
+    "level": 2,
+    "parent_subcat": 14,
+    "is_leaf": true,
+    "description": "This topic focuses on global events, international relations, and important developments around the world.",
+    "created_at": "2025-12-17T05:57:41.094Z",
+    "updated_at": "2025-12-17T05:57:41.094Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 28,
+  "fields": {
+    "category": 6,
+    "name": "History",
+    "level": 1,
+    "parent_subcat": 15,
+    "is_leaf": true,
+    "description": "This topic covers historical events, civilizations, movements, and important milestones from the past.",
+    "created_at": "2025-12-17T05:58:21.737Z",
+    "updated_at": "2025-12-17T05:58:21.737Z"
+  }
+},
+{
+  "model": "quizzes.subcategory",
+  "pk": 29,
+  "fields": {
+    "category": 6,
+    "name": "Science",
+    "level": 2,
+    "parent_subcat": 15,
+    "is_leaf": true,
+    "description": "This topic includes basic scientific concepts and facts from physics, chemistry, biology, and general science.",
+    "created_at": "2025-12-17T05:59:10.152Z",
+    "updated_at": "2025-12-17T05:59:10.152Z"
+  }
+}
+]
