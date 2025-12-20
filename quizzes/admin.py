@@ -19,3 +19,11 @@ class SubCategoryAdmin(admin.ModelAdmin):
 class QuizAttemptAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "category", "subcategory", "score", "started_at")
     list_filter = ("category", "difficulty", "status")
+
+from .models import Concept
+
+@admin.register(Concept)
+class ConceptAdmin(admin.ModelAdmin):
+    list_display = ('name', 'subcategory', 'difficulty')
+    list_filter = ('difficulty', 'subcategory')
+    search_fields = ('name',)

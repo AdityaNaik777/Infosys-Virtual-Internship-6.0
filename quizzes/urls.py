@@ -24,4 +24,14 @@ urlpatterns = [
     path("attempt/<uuid:attempt_id>/question/", views.show_question, name="show_question"),
     path("attempt/<uuid:attempt_id>/submit/", views.submit_answer, name="submit_answer"),
     path("attempt/<uuid:attempt_id>/results/", views.quiz_results, name="quiz_results"),
+
+     # Performance Dashbaord
+     path("performance/",views.performance_dashboard,name="performance_dashboard"),       
+
+     # PDF for perfo
+     path("performance/download/", views.download_performance_pdf,name="download_performance_pdf"),
+
+    path('recent/', views.recent_quizzes_view, name='recent_quizzes'),
+    path('attempts/', views.attempts_summary_view, name='attempts_summary'),
+ 
 ]

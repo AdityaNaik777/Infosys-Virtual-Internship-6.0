@@ -54,23 +54,46 @@ def validate_questions(questions, count):
     return questions
 
 
-def generate_quiz_questions(topic, category, difficulty, count=10):
+def generate_quiz_questions(
+    topic,
+    category,
+    difficulty,
+    count=10,
+    concepts=None
+):
     """
-    Generate MCQs using Groq (LLaMA-3.3 70B versatile)
+    Generate MCQs using OpenAI
     """
 
     if not OPENAI_API_KEY:
         raise Exception("OPENAI_API_KEY not found in settings.")
 
+    # 🔹 CONCEPT AWARE PROMPT ADDITION
+    concept_block = ""
+    if concepts:
+        concept_block = "\n".join(
+            f"{i+1}. {concept}" for i, concept in enumerate(concepts)
+        )
 
     prompt = f"""
-Generate {count} multiple choice questions in STRICT JSON format.
+You are an expert exam question setter.
 
 Topic: {topic}
 Category: {category}
 Difficulty: {difficulty}
 
-Each item must follow EXACTLY this structure:
+STRICT RULES:
+1. Generate exactly {count} UNIQUE multiple choice questions.
+2. Generate EXACTLY ONE question per concept.
+3. Use ONLY the concepts listed below.
+4. Do NOT repeat or rephrase questions.
+5. Each question must test a different idea.
+6. Keep difficulty strictly at {difficulty} level.
+
+CONCEPT LIST:
+{concept_block}
+
+Each item must follow EXACTLY this JSON structure:
 
 [
   {{
@@ -84,7 +107,8 @@ Each item must follow EXACTLY this structure:
   }}
 ]
 
-Return ONLY the JSON array. No text outside JSON.
+Return ONLY the JSON array.
+No text outside JSON.
 """
 
     try:
@@ -99,7 +123,8 @@ Return ONLY the JSON array. No text outside JSON.
                 "messages": [
                     {"role": "user", "content": prompt}
                 ],
-                "temperature": 0.2,
+                # 🔹 IMPORTANT: INCREASE TEMPERATURE FOR VARIETY
+                "temperature": 0.85,
             },
             timeout=45
         )
@@ -107,7 +132,7 @@ Return ONLY the JSON array. No text outside JSON.
         response.raise_for_status()
         data = response.json()
 
-        # Extract text from Groq response
+        # Extract text from model response
         message = data["choices"][0]["message"]["content"]
 
         # Clean and extract JSON
@@ -121,3 +146,4 @@ Return ONLY the JSON array. No text outside JSON.
 
     except Exception as e:
         raise Exception(f"Failed to generate quiz questions: {e}")
+

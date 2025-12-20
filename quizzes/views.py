@@ -7,9 +7,29 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from .models import QuizAttempt, Question
+from .models import Concept
+import random
 from django.views.decorators.http import require_POST
 import json
+from django.db.models.functions import TruncDate
 
+# for performance pdf functionality
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from django.http import HttpResponse
+from django.utils.timezone import now
+
+# Attempts summary 
+from django.db.models import Count, Q
+from django.utils.timezone import now
+from datetime import timedelta
+
+# AI Feedback recommendation
+from .ai_feedback_service import generate_ai_feedback
 # ============================================================
 # USER DASHBOARD
 # ============================================================
@@ -209,6 +229,8 @@ def start_quiz(request, subcategory_id, difficulty):
 
 @login_required
 @require_POST
+@login_required
+@require_POST
 def generate_questions(request, attempt_id):
     """
     AJAX endpoint to generate questions using AI
@@ -224,7 +246,8 @@ def generate_questions(request, attempt_id):
 
     try:
         from .ai_service import generate_quiz_questions
-        from .models import Question
+        from .models import Question, Concept
+        import random
 
         REQUIRED_QUESTIONS = quiz_attempt.total_questions  # usually 10
         MAX_RETRIES = 5
@@ -233,15 +256,38 @@ def generate_questions(request, attempt_id):
         formatted_questions = []
         question_id = 1
 
-        # 🔁 RETRY LOOP (NEW)
+        # 🔁 RETRY LOOP
         while len(formatted_questions) < REQUIRED_QUESTIONS and retry_count < MAX_RETRIES:
             retry_count += 1
 
+            # 🔹 ADD: FETCH CONCEPTS (THIS IS THE KEY ADDITION)
+            concepts_qs = Concept.objects.filter(
+                subcategory=quiz_attempt.subcategory,
+                difficulty=quiz_attempt.difficulty
+            )
+
+            concept_names = list(concepts_qs.values_list('name', flat=True))
+
+            # Safety check
+            if len(concept_names) < REQUIRED_QUESTIONS:
+                return JsonResponse({
+                    "success": False,
+                    "error": "Not enough concepts configured for this quiz."
+                }, status=500)
+
+            # Pick unique concepts
+            selected_concepts = random.sample(
+                concept_names,
+                REQUIRED_QUESTIONS
+            )
+
+            # 🔹 AI CALL WITH CONCEPTS
             questions_data = generate_quiz_questions(
                 topic=quiz_attempt.subcategory.name,
                 category=quiz_attempt.category.name,
                 difficulty=quiz_attempt.difficulty,
-                count=REQUIRED_QUESTIONS
+                count=REQUIRED_QUESTIONS,
+                concepts=selected_concepts
             )
 
             for q in questions_data:
@@ -461,3 +507,361 @@ def finalize_quiz_attempt(quiz_attempt):
     )
 
     quiz_attempt.save()
+
+# Performance Analysis and AI-Feedback 
+@login_required
+def performance_dashboard(request):
+    request.session.pop("ai_feedback", None)
+
+    user = request.user
+
+    completed_qs = QuizAttempt.objects.filter(
+        user=user,
+        status=QuizAttempt.STATUS_COMPLETED
+    )
+
+    # ---------------------------
+    # 1. OVERALL STATS
+    # ---------------------------
+    overall = completed_qs.aggregate(
+        total_quizzes=Count('id'),
+        avg_score=Avg('score'),          
+        total_correct=Sum('correct_answers'),
+        total_attempted=Sum('attempted_questions'),
+        total_time=Sum('time_taken_seconds')
+    )
+
+    overall_accuracy = (
+        (overall['total_correct'] / overall['total_attempted']) * 100
+        if overall['total_attempted']
+        else 0
+    )
+
+    avg_time_per_question = (
+        overall['total_time'] / overall['total_attempted']
+        if overall['total_attempted']
+        else 0
+    )
+
+    # ---------------------------
+    # 2. CATEGORY-WISE DISTRIBUTION
+    # ---------------------------
+    category_distribution = (
+        completed_qs
+        .exclude(category__isnull=True)
+        .values('category__name')        
+        .annotate(quiz_count=Count('id'))
+        .order_by('-quiz_count')
+    )
+
+    # ---------------------------
+    # 3. SUBCATEGORY-WISE ACCURACY
+    # ---------------------------
+    subcategory_stats = (
+        completed_qs
+        .exclude(subcategory__isnull=True)
+        .values('subcategory__name')
+        .annotate(
+            correct=Sum('correct_answers'),
+            attempted=Sum('attempted_questions')
+        )
+    )
+
+    subcategory_accuracy = []
+    for item in subcategory_stats:
+        accuracy = (
+            (item['correct'] / item['attempted']) * 100
+            if item['attempted']
+            else 0
+        )
+        subcategory_accuracy.append({
+            'subcategory': item['subcategory__name'],
+            'accuracy': round(accuracy, 2)
+        })
+
+    # ---------------------------
+    # STRONG vs WEAK TOPICS
+    # ---------------------------
+    strong_topics = []
+    weak_topics = []
+
+    for item in subcategory_accuracy:
+        if item['accuracy'] >= 75:
+            strong_topics.append(item)
+        elif item['accuracy'] <= 50:
+            weak_topics.append(item)
+
+    # ---------------------------
+    # 4. DIFFICULTY-WISE PERFORMANCE
+    # ---------------------------
+    difficulty_performance = completed_qs.values(
+        'difficulty'
+    ).annotate(
+        avg_score=Avg('score')
+    )
+
+    # ---------------------------
+    # 5. PERFORMANCE OVER TIME
+    # ---------------------------
+    performance_over_time = (
+        completed_qs
+        .exclude(completed_at__isnull=True)
+        .annotate(date=TruncDate('completed_at'))
+        .values('date')
+        .annotate(avg_score=Avg('score'))
+        .order_by('date')
+    )
+
+    # ---------------------------
+    # 6. INSIGHTS
+    # ---------------------------
+    insights = []
+
+    if overall_accuracy >= 80:
+        insights.append("Excellent accuracy! You have strong conceptual clarity.")
+    elif overall_accuracy >= 60:
+        insights.append("Good accuracy. Focus on weaker topics to improve further.")
+    else:
+        insights.append("Accuracy is low. Try revising concepts before attempting quizzes.")
+
+    if avg_time_per_question < 30:
+        insights.append("You answer quickly. Ensure accuracy is not affected.")
+    else:
+        insights.append("You take time to answer. Accuracy is more important than speed.")
+
+    # ---------------------------
+    # 7. AI-GENERATED FEEDBACK 
+    # ---------------------------
+    difficulty_map = {
+        d['difficulty']: round(d['avg_score'] or 0, 2)
+        for d in difficulty_performance
+    }
+    weak_concepts = []
+
+    for wt in weak_topics:
+        concepts = Concept.objects.filter(
+            subcategory__name=wt['subcategory']
+        ).values_list('name', flat=True)
+
+        weak_concepts.extend(list(concepts[:5]))  # limit per topic
+    ai_summary = {
+        "overall_accuracy": round(overall_accuracy, 2),
+        "avg_time_per_question": round(avg_time_per_question, 2),
+        "difficulty_performance": difficulty_map,
+        "strong_topics": [t['subcategory'] for t in strong_topics],
+        "weak_topics": [t['subcategory'] for t in weak_topics],
+        "weak_concepts": weak_concepts,
+    }
+
+    if not request.session.get("ai_feedback"):
+        try:
+            request.session["ai_feedback"] = generate_ai_feedback(ai_summary)
+        except Exception:
+            request.session["ai_feedback"] = (
+                "Your performance data is being analyzed. "
+                "Keep practicing regularly to strengthen your understanding."
+            )
+
+    ai_feedback = request.session["ai_feedback"]
+
+    # ---------------------------
+    # FINAL CONTEXT
+    # ---------------------------
+    context = {
+        'total_quizzes': overall['total_quizzes'] or 0,
+        'avg_score': round(overall['avg_score'] or 0, 2),
+        'overall_accuracy': round(overall_accuracy, 2),
+        'avg_time_per_question': round(avg_time_per_question, 2),
+
+        'category_distribution': list(category_distribution),
+        'subcategory_accuracy': subcategory_accuracy,
+        'difficulty_performance': list(difficulty_performance),
+        'performance_over_time': list(performance_over_time),
+
+        'insights': insights,
+        'strong_topics': strong_topics,
+        'weak_topics': weak_topics,
+        'ai_feedback': ai_feedback,
+    }
+
+    return render(request, 'quizzes/performance_dashboard.html', context)
+
+
+@login_required
+def download_performance_pdf(request):
+    user = request.user
+
+    completed_qs = QuizAttempt.objects.filter(
+        user=user,
+        status=QuizAttempt.STATUS_COMPLETED
+    )
+
+    overall = completed_qs.aggregate(
+        total_quizzes=Count('id'),
+        avg_score=Avg('score'),
+        total_correct=Sum('correct_answers'),
+        total_attempted=Sum('attempted_questions'),
+    )
+
+    overall_accuracy = (
+        (overall['total_correct'] / overall['total_attempted']) * 100
+        if overall['total_attempted'] else 0
+    )
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = (
+        'attachment; filename="AI_Quiz_Hub_Performance_Report.pdf"'
+    )
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # ---------------- HEADER ----------------
+    title_style = ParagraphStyle(
+        name="TitleStyle",
+        fontSize=20,
+        alignment=1,
+        spaceAfter=10,
+        textColor=colors.HexColor("#1f2937")
+    )
+
+    subtitle_style = ParagraphStyle(
+        name="SubtitleStyle",
+        fontSize=12,
+        alignment=1,
+        spaceAfter=20,
+        textColor=colors.grey
+    )
+
+    elements.append(Paragraph("AI Quiz Hub", title_style))
+    elements.append(Paragraph("Performance Report", subtitle_style))
+
+    # ---------------- USER INFO ----------------
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("<b>User Information</b>", styles['Heading2']))
+    elements.append(Spacer(1, 6))
+
+    elements.append(Paragraph(
+        f"<b>Username:</b> {user.username}", styles['Normal']
+    ))
+    elements.append(Paragraph(
+        f"<b>Generated on:</b> {now().strftime('%d %b %Y')}", styles['Normal']
+    ))
+
+    elements.append(Spacer(1, 16))
+
+    # ---------------- SUMMARY ----------------
+    elements.append(Paragraph("<b>Performance Summary</b>", styles['Heading2']))
+    elements.append(Spacer(1, 8))
+
+    summary_table = Table([
+        ["Total Quizzes Attempted", overall['total_quizzes'] or 0],
+        ["Average Score", f"{round(overall['avg_score'] or 0, 2)} %"],
+        ["Overall Accuracy", f"{round(overall_accuracy, 2)} %"],
+    ], colWidths=[250, 150])
+
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.whitesmoke),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('FONT', (0,0), (-1,-1), 'Helvetica'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+
+    elements.append(summary_table)
+    elements.append(Spacer(1, 20))
+
+    # ---------------- TOPIC TABLE ----------------
+    elements.append(Paragraph("<b>Topic-wise Accuracy</b>", styles['Heading2']))
+    elements.append(Spacer(1, 8))
+
+    topic_data = [["Topic", "Accuracy (%)"]]
+
+    subcategory_stats = completed_qs.values(
+        'subcategory__name'
+    ).annotate(
+        correct=Sum('correct_answers'),
+        attempted=Sum('attempted_questions')
+    )
+
+    for item in subcategory_stats:
+        if item['attempted']:
+            acc = round((item['correct'] / item['attempted']) * 100, 2)
+            topic_data.append([item['subcategory__name'], acc])
+
+    topic_table = Table(topic_data, colWidths=[300, 100])
+    topic_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#e5e7eb")),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('ALIGN', (1,1), (1,-1), 'RIGHT'),
+        ('FONT', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+
+    elements.append(topic_table)
+
+    # ---------------- FOOTER ----------------
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph(
+        "This report is generated automatically by AI Quiz Hub.",
+        ParagraphStyle(
+            name="Footer",
+            fontSize=9,
+            alignment=1,
+            textColor=colors.grey
+        )
+    ))
+
+    doc.build(elements)
+    return response
+
+# RECENT QUIZZES
+@login_required
+def recent_quizzes_view(request):
+    recent_quizzes = (
+        QuizAttempt.objects
+        .filter(
+            user=request.user,
+            status=QuizAttempt.STATUS_COMPLETED
+        )
+        .select_related('subcategory')
+        .order_by('-completed_at')[:10]
+    )
+
+    return render(request, 'quizzes/recent_quizzes.html', {
+        'recent_quizzes': recent_quizzes
+    })
+
+@login_required
+def attempts_summary_view(request):
+    user = request.user
+
+    total_attempts = QuizAttempt.objects.filter(user=user).count()
+
+    status_counts = QuizAttempt.objects.filter(user=user).aggregate(
+        completed=Count('id', filter=Q(status=QuizAttempt.STATUS_COMPLETED)),
+        abandoned=Count('id', filter=Q(status=QuizAttempt.STATUS_ABANDONED)),
+    )
+
+    # last_7_days_attempts = QuizAttempt.objects.filter(
+    #     user=user,
+    #     started_at__gte=now() - timedelta(days=7)
+    # ).count()
+
+    context = {
+        'total_attempts': total_attempts,
+        'completed_attempts': status_counts['completed'],
+        'abandoned_attempts': status_counts['abandoned'],
+        # 'last_7_days_attempts': last_7_days_attempts,
+    }
+
+    return render(request, 'quizzes/attempts_summary.html', context)
