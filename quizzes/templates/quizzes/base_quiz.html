@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>
-      {% block title %}Quiz — {% if quiz_attempt %}{{quiz_attempt.subcategory.name }}{% else %}Quiz{% endif %}{% endblock %}
+      {% block title %}Quiz – {% if quiz_attempt %}{{quiz_attempt.subcategory.name }}{% else %}Quiz{% endif %}{% endblock %}
     </title>
 
     <!-- Colors & design tokens -->
@@ -52,7 +52,7 @@
           var(--bg);
         color: #e6eef8;
 
-        /* 🔑 FIX */
+        /* FIX */
         display: block;
         overflow-y: auto;
       }
@@ -292,6 +292,14 @@
         font-size: 18px;
       }
 
+      .timer.warning {
+        color: #fbbf24;
+      }
+
+      .timer.danger {
+        color: var(--danger);
+      }
+
       /* small helpers */
       .muted {
         color: var(--muted);
@@ -324,7 +332,13 @@
 
     {% block extra_styles %}{% endblock %}
   </head>
-  <body>
+  <body
+  data-question="{{ question_number|default:1 }}"
+  data-total="{{ total_questions|default:quiz_attempt.total_questions }}"
+  data-remaining="{{ remaining_seconds|default:600 }}"
+  data-quit-url="{% url 'quizzes:dashboard' %}"
+>
+
     <div class="container">
       <!-- LEFT: Quiz card -->
       <main class="card" role="main" aria-labelledby="quiz-title">
@@ -333,7 +347,7 @@
             <div class="badge">Quiz</div>
             <div>
               <h1 id="quiz-title" class="title">
-                {% if quiz_attempt %} {{ quiz_attempt.subcategory.name }} {%else%} — {% endif %}
+                {% if quiz_attempt %} {{ quiz_attempt.subcategory.name }} {%else%} – {% endif %}
               </h1>
 
               <p class="sub">
@@ -424,7 +438,7 @@
         </div>
       </main>
 
-      <!-- RIGHT: summary / controls -->
+      <!-- RIGHT: summary panel -->
       <aside class="panel" aria-labelledby="panel-head">
         <h4 id="panel-head">Session</h4>
         <div class="stat">
@@ -434,7 +448,7 @@
         <div class="stat">
           <div class="muted">Category</div>
           <div>
-            {% if quiz_attempt %} {{ quiz_attempt.category.name }} {% else %} —
+            {% if quiz_attempt %} {{ quiz_attempt.category.name }} {% else %} –
             {% endif %}
           </div>
         </div>
@@ -442,7 +456,7 @@
           <div class="muted">Subcategory</div>
           <div>
             {% if quiz_attempt %} {{ quiz_attempt.subcategory.name }} {% else %}
-            — {% endif %}
+            – {% endif %}
           </div>
         </div>
         <div class="stat">
@@ -494,7 +508,7 @@
           <strong>A</strong>/<strong>B</strong>/<strong>C</strong>/<strong
             >D</strong
           >
-          — Submit: <strong>Enter</strong>
+          – Submit: <strong>Enter</strong>
         </div>
       </aside>
     </div>
@@ -520,6 +534,7 @@
         const answeredCountEl = get('#answered-count');
         const panelAnswered = get('#panel-answered');
         const totalCountEl = get('#total-count');
+        const timerDisplay = get('#timer-display');
 
         // Template values (Django will fill these)
         let qNo = Number(metaQno ? metaQno.textContent.trim() : ({{ question_number|default:1 }}));
@@ -598,7 +613,7 @@
               const resultUrl = document.body.dataset.resultsUrl || "/";
               window.location.href = resultUrl;
             } else {
-              // child templates should load next question — we simulate leaving UI ready
+              // child templates should load next question – we simulate leaving UI ready
               deselectAll();
               // smooth scroll to top of card
               get('.card').scrollIntoView({behavior:'smooth'});
@@ -635,43 +650,95 @@
           });
         }
 
-        // Timer (if quiz_attempt.time_limit_seconds exists)
+        // Timer (with proper remaining time calculation)
         (function initTimer(){
-          const display = get('#timer-display');
-          const seconds = {{ quiz_attempt.time_limit_seconds|default:600 }};
-          // If server supplies started_at, compute remaining from that.
-          let remaining = seconds;
-          {% if quiz_attempt.started_at %}
-          try{
-            // attempt to compute from ISO timestamp (server time may differ slightly)
-            const started = new Date("{{ quiz_attempt.started_at|date:'c' }}");
-
-            const elapsed = Math.floor((Date.now() - started.getTime()) / 1000);
-            if(!isNaN(elapsed)) remaining = Math.max(0, seconds - elapsed);
-          }catch(e){}
-          {% endif %}
-
+          let remaining = parseInt(document.body.dataset.remaining || 600);
+          
           function fmt(s){
             const m = Math.floor(s/60).toString().padStart(2,'0');
             const sec = (s%60).toString().padStart(2,'0');
             return `${m}:${sec}`;
           }
-          if(display) display.textContent = fmt(remaining);
 
-          // simple countdown every second
-          const interval = setInterval(()=>{
-            if(remaining <= 0){
-              clearInterval(interval);
-              display.textContent = "00:00";
-              // child templates should handle auto-submit — here we show an alert
-              // Optionally: automatically click submit
-              // submitBtn && submitBtn.click();
-              return;
+          function updateTimerDisplay(){
+            if(timerDisplay){
+              timerDisplay.textContent = fmt(remaining);
+              
+              // Change color based on time remaining
+              if(remaining <= 60 && remaining > 30){
+                timerDisplay.classList.remove('danger');
+                timerDisplay.classList.add('warning');
+              } else if(remaining <= 30){
+                timerDisplay.classList.remove('warning');
+                timerDisplay.classList.add('danger');
+              }
             }
+          }
+
+          updateTimerDisplay();
+
+          // countdown every second
+          const interval = setInterval(()=>{
             remaining -= 1;
-            display.textContent = fmt(remaining);
+            updateTimerDisplay();
+
+            // When timer reaches 0
+            if(remaining < 0){
+              clearInterval(interval);
+              // Auto-submit quiz
+              autoSubmitQuiz();
+            }
           }, 1000);
         })();
+
+        // Auto-submit function
+        async function autoSubmitQuiz(){
+          const attemptId = "{{ quiz_attempt.id }}";
+          
+          // Get CSRF token
+          function getCookie(name) {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  const cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      const cookie = cookies[i].trim();
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          const csrftoken = getCookie('csrftoken');
+          
+          try {
+            // Call backend auto-submit endpoint
+            const response = await fetch(`/quiz/attempt/${attemptId}/auto-submit/`, {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({})
+            });
+            
+            const data = await response.json();
+            
+            if(data.success){
+              // Redirect to results with auto_submitted flag
+              window.location.href = data.redirect_url;
+            } else {
+              console.error('Auto-submit failed:', data);
+              // Fallback redirect
+              window.location.href = `/quiz/attempt/${attemptId}/results/?auto_submitted=true`;
+            }
+          } catch (err) {
+            console.error('Auto-submit error:', err);
+            // Fallback redirect
+            window.location.href = `/quiz/attempt/${attemptId}/results/?auto_submitted=true`;
+          }
+        }
 
       })();
     </script>

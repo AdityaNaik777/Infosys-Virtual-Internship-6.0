@@ -202,6 +202,7 @@ def instructions(request, subcategory_id, difficulty):
 # ============================================================
 # START QUIZ — only allowed for leaf nodes and logged-in users
 # ============================================================
+
 @login_required
 def start_quiz(request, subcategory_id, difficulty):
     """
@@ -224,7 +225,8 @@ def start_quiz(request, subcategory_id, difficulty):
         subcategory=subcategory,
         difficulty=difficulty,
         total_questions=10,
-        status=QuizAttempt.STATUS_GENERATING
+        status=QuizAttempt.STATUS_GENERATING,
+        started_at=timezone.now()  # Add this line
     )
     
     # Show loading page that will trigger AJAX to generate questions
@@ -233,6 +235,7 @@ def start_quiz(request, subcategory_id, difficulty):
         "subcategory": subcategory,
         "difficulty": difficulty,
     })
+
 
 # get active quiz function
 def get_active_quiz(user):
@@ -259,12 +262,40 @@ def resume_quiz_prompt(request,attempt_id):
 # RESUME ACITON
 @login_required
 def resume_quiz(request, attempt_id):
+    """
+    Resume quiz - RESUME the timer from where it was paused
+    """
     quiz_attempt = get_object_or_404(
         QuizAttempt,
         id=attempt_id,
         user=request.user,
         status=QuizAttempt.STATUS_IN_PROGRESS
     )
+
+    # Clear the paused_at to indicate quiz is active again
+    quiz_attempt.paused_at = None
+    # Reset started_at to current time for timer calculation
+    quiz_attempt.started_at = timezone.now()
+    quiz_attempt.save()
+
+    return redirect(
+        'quizzes:show_question',
+        attempt_id=quiz_attempt.id
+    )
+
+@login_required
+def previous_question(request, attempt_id):
+    quiz_attempt = get_object_or_404(
+        QuizAttempt,
+        id=attempt_id,
+        user=request.user,
+        status=QuizAttempt.STATUS_IN_PROGRESS
+    )
+
+    # Move back only if possible
+    if quiz_attempt.current_question_index > 0:
+        quiz_attempt.current_question_index -= 1
+        quiz_attempt.save()
 
     return redirect(
         'quizzes:show_question',
@@ -274,6 +305,9 @@ def resume_quiz(request, attempt_id):
 # QUIT & END ACTION 
 @login_required
 def quit_quiz(request, attempt_id):
+    """
+    Quit & End quiz - PAUSE the timer
+    """
     quiz_attempt = get_object_or_404(
         QuizAttempt,
         id=attempt_id,
@@ -281,6 +315,14 @@ def quit_quiz(request, attempt_id):
         status=QuizAttempt.STATUS_IN_PROGRESS
     )
 
+    # Calculate time spent so far and add to accumulated time
+    if quiz_attempt.started_at and not quiz_attempt.paused_at:
+        time_spent = int((timezone.now() - quiz_attempt.started_at).total_seconds())
+        quiz_attempt.time_spent_seconds += time_spent
+    
+    # Mark when quiz was paused
+    quiz_attempt.paused_at = timezone.now()
+    
     quiz_attempt.status = QuizAttempt.STATUS_ABANDONED
     quiz_attempt.completed_at = timezone.now()
     quiz_attempt.save()
@@ -438,16 +480,50 @@ def show_question(request, attempt_id):
     if not current_question:
         return redirect('quizzes:quiz_results', attempt_id=quiz_attempt.id)
     
+    # Get the user's previous answer if they already answered this question
+    current_idx = quiz_attempt.current_question_index
+    user_answer = None
+    
+    if current_idx < len(quiz_attempt.questions):
+        question_data = quiz_attempt.questions[current_idx]
+        user_answer = question_data.get('user_answer')
+    
+    # Add user_answer to the question dict so template can access it
+    current_question_with_answer = dict(current_question)
+    current_question_with_answer['user_answer'] = user_answer
+    
     # Calculate progress
     answered_count = sum(1 for q in quiz_attempt.questions if q.get('user_answer') is not None)
     
+    # Calculate remaining time correctly
+    TIME_LIMIT_SECONDS = 600  # 10 minutes total
+    
+    # Time already spent in previous sessions
+    time_already_spent = quiz_attempt.time_spent_seconds
+    
+    # Time spent in current session
+    if quiz_attempt.started_at:
+        time_spent_current_session = int((timezone.now() - quiz_attempt.started_at).total_seconds())
+    else:
+        time_spent_current_session = 0
+    
+    # Total time consumed
+    total_time_spent = time_already_spent + time_spent_current_session
+    
+    # Remaining time
+    remaining_seconds = max(0, TIME_LIMIT_SECONDS - total_time_spent)
+    
     return render(request, "quizzes/quiz_question.html", {
         "quiz_attempt": quiz_attempt,
-        "question": current_question,
+        "question": current_question_with_answer,
         "question_number": quiz_attempt.current_question_index + 1,
         "total_questions": quiz_attempt.total_questions,
         "answered_count": answered_count,
+        "has_prev": quiz_attempt.current_question_index > 0,
+        "remaining_seconds": remaining_seconds,
+        "time_already_spent": time_already_spent,
     })
+
 
 
 @login_required
@@ -498,6 +574,23 @@ def submit_answer(request, attempt_id):
     })
 
 @login_required
+@require_POST
+def auto_submit_quiz(request, attempt_id):
+    """
+    Auto-submit quiz when timer expires
+    Marks all unanswered questions as attempted but incorrect
+    """
+    quiz_attempt = get_object_or_404(QuizAttempt, id=attempt_id, user=request.user)
+    
+    # Mark quiz as completed
+    finalize_quiz_attempt(quiz_attempt)
+    
+    return JsonResponse({
+        'success': True,
+        'redirect_url': f'/quiz/attempt/{quiz_attempt.id}/results/?auto_submitted=true'
+    })
+
+@login_required
 def quiz_results(request, attempt_id):
     """
     Show quiz results with score and review
@@ -522,6 +615,9 @@ def quiz_results(request, attempt_id):
     else:
         grade = 'F'
     
+    # Check if this was an auto-submit
+    auto_submitted = request.GET.get('auto_submitted') == 'true'
+    
     return render(request, "quizzes/quiz_results.html", {
         "quiz_attempt": quiz_attempt,
         "total": total,
@@ -529,6 +625,7 @@ def quiz_results(request, attempt_id):
         "incorrect": incorrect,
         "percentage": percentage,
         "grade": grade,
+        "auto_submitted": auto_submitted,
     })
 
 def finalize_quiz_attempt(quiz_attempt):
@@ -561,9 +658,14 @@ def finalize_quiz_attempt(quiz_attempt):
     quiz_attempt.completed_at = timezone.now()
     quiz_attempt.status = QuizAttempt.STATUS_COMPLETED
 
-    quiz_attempt.time_taken_seconds = int(
-        (quiz_attempt.completed_at - quiz_attempt.started_at).total_seconds()
-    )
+    # Calculate final time spent
+    if quiz_attempt.started_at:
+        time_spent_current_session = int(
+            (quiz_attempt.completed_at - quiz_attempt.started_at).total_seconds()
+        )
+        quiz_attempt.time_taken_seconds = quiz_attempt.time_spent_seconds + time_spent_current_session
+    else:
+        quiz_attempt.time_taken_seconds = quiz_attempt.time_spent_seconds
 
     quiz_attempt.save()
 

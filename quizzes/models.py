@@ -59,7 +59,8 @@ class QuizAttempt(models.Model):
     ],
     default='medium')
     time_limit_seconds = models.IntegerField(default=600)  # 10 minutes default
-    
+    paused_at = models.DateTimeField(null=True, blank=True)
+    time_spent_seconds = models.IntegerField(default=0)
     # JSON structure for questions:
     # [
     #   {

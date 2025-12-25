@@ -1,38 +1,44 @@
 {% extends "quizzes/base_quiz.html" %}
-{% block title %}Question {{ question_number }} / {{ total_questions }} — {{ quiz_attempt.subcategory.name }}{% endblock %}
+<!-- quiz_question.html -->
+<!-- This block extends base_quiz.html -->
+
+{% block title %}Question {{ question_number }} / {{ total_questions }} – {{ quiz_attempt.subcategory.name }}{% endblock %}
 
 {% block quiz_content %}
   <p class="q-text">{{ question.question }}</p>
 
   <div class="options" id="options-wrap">
-    <label class="option" data-value="A">
+    <label class="option{% if question.user_answer == 'A' %} selected{% endif %}" data-value="A">
       <div class="letter">A</div>
       <div class="text">{{ question.option_a }}</div>
-      <input type="radio" name="answer" value="A">
+      <input type="radio" name="answer" value="A" {% if question.user_answer == 'A' %}checked{% endif %}>
     </label>
 
-    <label class="option" data-value="B">
+    <label class="option{% if question.user_answer == 'B' %} selected{% endif %}" data-value="B">
       <div class="letter">B</div>
       <div class="text">{{ question.option_b }}</div>
-      <input type="radio" name="answer" value="B">
+      <input type="radio" name="answer" value="B" {% if question.user_answer == 'B' %}checked{% endif %}>
     </label>
 
-    <label class="option" data-value="C">
+    <label class="option{% if question.user_answer == 'C' %} selected{% endif %}" data-value="C">
       <div class="letter">C</div>
       <div class="text">{{ question.option_c }}</div>
-      <input type="radio" name="answer" value="C">
+      <input type="radio" name="answer" value="C" {% if question.user_answer == 'C' %}checked{% endif %}>
     </label>
 
-    <label class="option" data-value="D">
+    <label class="option{% if question.user_answer == 'D' %} selected{% endif %}" data-value="D">
       <div class="letter">D</div>
       <div class="text">{{ question.option_d }}</div>
-      <input type="radio" name="answer" value="D">
+      <input type="radio" name="answer" value="D" {% if question.user_answer == 'D' %}checked{% endif %}>
     </label>
   </div>
 
   <div class="actions" style="margin-top:14px;">
+    {% if has_prev %}
+      <button class="btn secondary" id="back-btn" title="Go to previous question">← Back</button>
+    {% endif %}
     <button class="btn" id="submit-answer">Submit Answer</button>
-    <button class="btn secondary" id="mark-review">Mark for Review</button>
+    {% comment %} <button class="btn secondary" id="mark-review">Mark for Review</button>  {% endcomment %}
     <div style="flex:1"></div>
     <div class="muted">Answered: <span id="answered-count">{{ answered_count }}</span> / <span id="total-count">{{ total_questions }}</span></div>
   </div>
@@ -41,7 +47,8 @@
   <script>
     document.body.dataset.quitUrl = "{% url 'quizzes:dashboard' %}";
     document.body.dataset.resultsUrl = "{% url 'quizzes:quiz_results' attempt_id=quiz_attempt.id %}";
-    document.body.dataset.reviewUrl = "{% url 'quizzes:show_question' attempt_id=quiz_attempt.id %}"; // placeholder
+    document.body.dataset.reviewUrl = "{% url 'quizzes:show_question' attempt_id=quiz_attempt.id %}";
+    document.body.dataset.backUrl = "{% url 'quizzes:previous_question' attempt_id=quiz_attempt.id %}";
   </script>
 {% endblock %}
 
@@ -66,7 +73,9 @@
   const csrftoken = getCookie('csrftoken');
 
   const submitUrl = "{% url 'quizzes:submit_answer' attempt_id=quiz_attempt.id %}";
+  const backUrl = "{% url 'quizzes:previous_question' attempt_id=quiz_attempt.id %}";
   const submitBtn = document.getElementById('submit-answer');
+  const backBtn = document.getElementById('back-btn');
   const optionsWrap = document.getElementById('options-wrap');
   const answeredCountEl = document.getElementById('answered-count');
 
@@ -84,6 +93,15 @@
       if(inp) inp.checked = true;
     });
   });
+
+  // Back button handler
+  if(backBtn){
+    backBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      // Navigate directly to previous question
+      window.location.href = backUrl;
+    });
+  }
 
   submitBtn && submitBtn.addEventListener('click', async (e)=>{
     e.preventDefault();
