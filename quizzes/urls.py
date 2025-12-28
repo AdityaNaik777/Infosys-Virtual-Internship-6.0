@@ -19,12 +19,9 @@ urlpatterns = [
     # ============================================================
     # Quiz Flow (Instructions -> Start -> Questions -> Results)
     # ============================================================
-    path("subcategory/<int:subcategory_id>/instructions/<str:difficulty>/",
-         views.instructions,
-         name="instructions"),
-    path("start/<int:subcategory_id>/<str:difficulty>/",
-         views.start_quiz,
-         name="start_quiz"),
+    path("subcategory/<int:subcategory_id>/instructions/<str:difficulty>/",views.instructions,name="instructions"),
+    path('quiz/pre-start/',views.pre_start_quiz,name='pre_start_quiz'),
+    path("start/<int:subcategory_id>/<str:difficulty>/",views.start_quiz,name="start_quiz"),
     path("attempt/<uuid:attempt_id>/generate/", views.generate_questions, name="generate_questions"),
     path("attempt/<uuid:attempt_id>/question/", views.show_question, name="show_question"),
     path("attempt/<uuid:attempt_id>/submit/", views.submit_answer, name="submit_answer"),

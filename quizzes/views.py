@@ -178,6 +178,19 @@ def instructions(request, subcategory_id, difficulty):
 # START QUIZ — only allowed for leaf nodes and logged-in users
 # ============================================================
 
+def pre_start_quiz(request):
+    """
+    Entry point before the quiz navigation
+    """
+    active_quiz=get_active_quiz(request.user)
+
+    if active_quiz:
+        return redirect('quizzes:resume_quiz_prompt',attempt_id=active_quiz.id)
+    
+    # No active quiz-> allow navigation
+    return redirect('quizzes:quiz_selector')
+
+
 @login_required
 def start_quiz(request, subcategory_id, difficulty):
     """
