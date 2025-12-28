@@ -20,6 +20,10 @@ from django.urls import path, include
 from django.contrib import admin
 from django.views.generic import RedirectView
 from core import views
+
+# Custom error handlers
+handler404 = 'core.views.custom_404'
+
 urlpatterns = [
     path('', views.index,name='home'),
     path('admin/', admin.site.urls),

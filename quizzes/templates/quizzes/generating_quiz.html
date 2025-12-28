@@ -1,80 +1,250 @@
-{% extends "quizzes/base_quiz.html" %}
-{% block title %}Generating Quiz — {{ subcategory.name }}{% endblock %}
-
-{% block quiz_content %}
-  <h2 class="q-text">Preparing your AI-generated quiz…</h2>
-  <p class="muted">Topic: <strong>{{ subcategory.name }}</strong> · Difficulty: <strong>{{ difficulty }}</strong></p>
-
-  <div style="margin-top:20px">
-    <div class="progress" aria-hidden="true" style="height:18px;">
-      <span id="gen-progress" style="width:6%; height:100%; display:block; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:999px;"></span>
-    </div>
-    <p id="gen-status" style="margin-top:10px" class="muted">Requesting AI...</p>
-  </div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-(function(){
-  const attemptId = "{{ quiz_attempt.id }}";
-  const url = "{% url 'quizzes:generate_questions' attempt_id=quiz_attempt.id %}";
-
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i=0;i<cookies.length;i++){
-        const c = cookies[i].trim();
-        if (c.startsWith(name + '=')) {
-          cookieValue = decodeURIComponent(c.substring(name.length+1));
-          break;
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Generating Quiz — {{ subcategory.name }}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet" />
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="{% static 'css/global.css' %}" />
+    
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0f1a 0%, #1a1f3a 50%, #0f1729 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-      }
-    }
-    return cookieValue;
-  }
-  const csrftoken = getCookie('csrftoken');
-
-  async function pollGeneration() {
-    try {
-      // POST to trigger generation
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await resp.json();
-
-      if (resp.ok && data.success) {
-        // Redirect to first question page
-        window.location.href = data.redirect_url;
-        return;
-      }
-
-      // show error message
-      document.getElementById('gen-status').innerText = "Generation failed: " + (data.error || resp.statusText);
-    } catch (err) {
-      document.getElementById('gen-status').innerText = "Network error: " + err;
-    }
-  }
-
-  // Animate the small progress bar while waiting
-  let prog = 6;
-  const bar = document.getElementById('gen-progress');
-  const ticker = setInterval(()=>{
-    prog = Math.min(92, prog + Math.random()*6);
-    if(bar) bar.style.width = prog + '%';
-  }, 420);
-
-  window.addEventListener('DOMContentLoaded', async ()=>{
-    await pollGeneration();
-    clearInterval(ticker);
-    if(bar) bar.style.width = '100%';
-  });
-})();
-</script>
-{% endblock %}
+        
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .generating-container {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            width: 100%;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .generating-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loader-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+        
+        .loader-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid rgba(251, 191, 36, 0.2);
+            border-top-color: #fbbf24;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loader-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+        }
+        
+        .generating-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .generating-subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+        
+        .generating-subtitle strong {
+            color: #60a5fa;
+        }
+        
+        .progress-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 10%;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+        
+        .progress-text {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            color: #fca5a5;
+            margin-top: 1.5rem;
+        }
+        
+        .error-message strong {
+            color: #ef4444;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .generating-title {
+                font-size: 1.5rem;
+            }
+            
+            .generating-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <div class="generating-container">
+        <div class="generating-card">
+            <div class="loader-icon">
+                <div class="loader-circle"></div>
+                <div class="loader-inner">🤖</div>
+            </div>
+            
+            <h2 class="generating-title">Preparing Your Quiz</h2>
+            <p class="generating-subtitle">
+                Topic: <strong>{{ subcategory.name }}</strong> · 
+                Difficulty: <strong>{{ difficulty|title }}</strong>
+            </p>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="gen-progress" class="progress-fill"></div>
+                </div>
+                <p id="gen-status" class="progress-text">Requesting AI...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    (function(){
+        const attemptId = "{{ quiz_attempt.id }}";
+        const url = "{% url 'quizzes:generate_questions' attempt_id=quiz_attempt.id %}";
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i=0; i<cookies.length; i++) {
+                    const c = cookies[i].trim();
+                    if (c.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(c.substring(name.length+1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
+        async function pollGeneration() {
+            try {
+                const resp = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok && data.success) {
+                    document.getElementById('gen-status').innerText = "Quiz ready! Redirecting...";
+                    window.location.href = data.redirect_url;
+                    return;
+                }
+                
+                // Show error message
+                const statusEl = document.getElementById('gen-status');
+                const errorMsg = data.error || resp.statusText;
+                statusEl.innerHTML = '<div class="error-message"><strong>Generation Failed</strong>' + errorMsg + '</div>';
+                document.querySelector('.progress-bar').style.display = 'none';
+            } catch (err) {
+                const statusEl = document.getElementById('gen-status');
+                statusEl.innerHTML = '<div class="error-message"><strong>Network Error</strong>' + err.message + '</div>';
+                document.querySelector('.progress-bar').style.display = 'none';
+            }
+        }
+        
+        // Animate the progress bar
+        let prog = 10;
+        const bar = document.getElementById('gen-progress');
+        const ticker = setInterval(() => {
+            prog = Math.min(90, prog + Math.random()*8);
+            if(bar) bar.style.width = prog + '%';
+        }, 420);
+        
+        window.addEventListener('DOMContentLoaded', async () => {
+            await pollGeneration();
+            clearInterval(ticker);
+            if(bar) bar.style.width = '100%';
+        });
+    })();
+    </script>
+</body>
+</html>

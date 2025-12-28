@@ -1,132 +1,279 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — AI Quiz Hub</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — AI Quiz Hub</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+    {% load static %}
+    <link
+      rel="stylesheet"
+      href="{% static 'quizzes/css/dashboard.css' %}?v=7"
+    />
+  </head>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" />
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'quizzes/css/dashboard.css' %}" />
-</head>
-
-<body>
-
-  <div class="navbar">
-    <div class="brand">AI Quiz Hub</div>
-    <div class="nav-links">
-      <a href="#">Dashboard</a>
-      <a href="{% url 'accounts:profile' %}">Profile</a>
-      <a href="{% url 'accounts:logout' %}">Logout</a>
-    </div>
-  </div>
-
-  <div class="dashboard-container">
-    <!-- WELCOME -->
-    <div class="welcome-card">
-      <div class="welcome-header">
-        {% if request.user.avatar_path %}
-        <img src="{{ request.user.avatar_path.url }}" class="user-avatar" />
-        {% else %}
-        <div class="user-avatar-placeholder">
-          {{ request.user.username|slice:":1"|upper }}
+  <body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <i class="ri-brain-line"></i>
         </div>
-        {% endif %}
-        <div>
-          <div class="welcome-title">
-            Welcome back, {{ request.user.username }} 👋
-          </div>
-          <div class="welcome-sub" ,>
-            Track your quiz performance and improve daily.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- QUICK ACTIONS -->
-
-    <div class="grid">
-      <a href="{% url 'quizzes:pre_start_quiz' %}" class="card-link">
-        <div class="card">
-          <div class="card-icon"><i class="ri-book-open-line"></i></div>
-          <div class="card-title">Start New Quiz</div>
-          <div class="card-desc">Choose category & difficulty.</div>
-        </div>
-      </a>
-
-      <a href="{% url 'quizzes:performance_dashboard' %}" class="card-link">
-        <div class="card">
-          <div class="card-icon">
-            <i class="ri-bar-chart-2-line"></i>
-          </div>
-          <div class="card-title">Performance Analytics</div>
-          <div class="card-desc">View score trends & insights.</div>
-        </div>
-      </a>
-
-      <!-- Recent Quizzes Card -->
-      <a href="{% url 'quizzes:recent_quizzes' %}" class="card-link">
-        <div class="card">
-          <div class="card-icon">
-            <i class="ri-history-line"></i>
-          </div>
-          <div class="card-title">Recent Quizzes</div>
-          <div class="card-desc">
-            {{ recent_quizzes|length }} recent quizzes
-          </div>
-        </div>
-      </a>
-
-      <!-- Attempts Summary Card -->
-      <a href="{% url 'quizzes:attempts_summary' %}" class="card-link">
-        <div class="card">
-          <div class="card-icon">
-            <i class="ri-settings-3-line"></i>
-          </div>
-          <div class="card-title">Attempts</div>
-          <div class="card-desc">Track your practice consistency</div>
-        </div>
-      </a>
-
-      <!-- Leaderboard Card -->
-      <a href="{% url 'quizzes:leaderboard' %}" class="card-link">
-        <div class="card">
-          <div class="card-icon">
-            <i class="ri-trophy-line"></i>
-          </div>
-          <div class="card-title">Leaderboard</div>
-          <div class="card-desc">See top performers</div>
-        </div>
-      </a>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-number">{{ total_completed }}</div>
-        <div class="stat-label">Quizzes Completed</div>
+        <span>AI Quiz Hub</span>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-number">{{ avg_score }}%</div>
-        <div class="stat-label">Average Score</div>
-      </div>
+      <!-- Sidebar Toggle Button -->
+      <button
+        class="sidebar-toggle-btn"
+        id="sidebarToggle"
+        title="Toggle Sidebar"
+      >
+        <i class="ri-arrow-left-s-line"></i>
+      </button>
 
-      <div class="stat-card">
-        <div class="stat-number">{{ best_score }}%</div>
-        <div class="stat-label">Best Score</div>
-      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active">
+          <i class="ri-dashboard-3-line"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="{% url 'quizzes:pre_start_quiz' %}" class="nav-item">
+          <i class="ri-play-circle-line"></i>
+          <span>Start Quiz</span>
+        </a>
+        <a href="{% url 'quizzes:performance_dashboard' %}" class="nav-item">
+          <i class="ri-line-chart-line"></i>
+          <span>Analytics</span>
+        </a>
+        <a href="{% url 'quizzes:leaderboard' %}" class="nav-item">
+          <i class="ri-trophy-line"></i>
+          <span>Leaderboard</span>
+        </a>
+        <a href="{% url 'accounts:profile' %}" class="nav-item">
+          <i class="ri-user-line"></i>
+          <span>Profile</span>
+        </a>
+      </nav>
 
-      <div class="stat-card">
-        <div class="stat-number">{{ completion_rate }}%</div>
-        <div class="stat-label">Completion Rate</div>
+      <div class="sidebar-footer">
+        <a href="{% url 'accounts:logout' %}" class="logout-btn">
+          <i class="ri-logout-box-r-line"></i>
+          <span>Logout</span>
+        </a>
       </div>
-    </div>
-  </div>
-</body>
+    </aside>
 
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="page-title">
+            <h1>Dashboard</h1>
+            <p>Welcome back, let's continue learning!</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a
+            href="{% url 'accounts:profile' %}"
+            class="user-profile"
+            title="View Profile"
+          >
+            {% if request.user.avatar_path %}
+            <img
+              src="{{ request.user.avatar_path.url }}"
+              class="user-avatar"
+              alt="Avatar"
+            />
+            {% else %}
+            <div class="user-avatar-placeholder">
+              {{ request.user.username|slice:":1"|upper }}
+            </div>
+            {% endif %}
+            <div class="user-info">
+              <span class="user-name">{{ request.user.username }}</span>
+              <span class="user-role">Learner</span>
+            </div>
+          </a>
+          <a
+            href="{% url 'accounts:logout' %}"
+            class="topbar-logout-btn"
+            title="Logout"
+          >
+            <i class="ri-logout-box-r-line"></i>
+          </a>
+        </div>
+      </header>
+
+      <!-- DASHBOARD GRID -->
+      <div class="dashboard-grid">
+        <!-- STATS ROW -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon blue">
+                <i class="ri-file-list-3-line"></i>
+              </div>
+            </div>
+            <div class="stat-value">{{ total_completed }}</div>
+            <div class="stat-label">Quizzes Completed</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon gold">
+                <i class="ri-percent-line"></i>
+              </div>
+            </div>
+            <div class="stat-value">{{ avg_score }}%</div>
+            <div class="stat-label">Average Score</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon green">
+                <i class="ri-star-line"></i>
+              </div>
+            </div>
+            <div class="stat-value">{{ best_score }}%</div>
+            <div class="stat-label">Best Score</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon purple">
+                <i class="ri-checkbox-circle-line"></i>
+              </div>
+            </div>
+            <div class="stat-value">{{ completion_rate }}%</div>
+            <div class="stat-label">Completion Rate</div>
+          </div>
+        </div>
+
+        <!-- MAIN BENTO GRID -->
+        <div class="bento-grid">
+          <!-- START QUIZ - Large Card -->
+          <a
+            href="{% url 'quizzes:quiz_selector' %}"
+            class="bento-card bento-large start-quiz-card"
+          >
+            <div class="bento-bg-pattern"></div>
+            <div class="bento-content">
+              <div class="bento-icon-large">
+                <i class="ri-rocket-2-line"></i>
+              </div>
+              <h2>Start New Quiz</h2>
+              <p>
+                Challenge yourself with AI-powered questions tailored to your
+                skill level
+              </p>
+              <div class="bento-action">
+                <span>Begin Now</span>
+                <i class="ri-arrow-right-line"></i>
+              </div>
+            </div>
+          </a>
+
+          <!-- PERFORMANCE ANALYTICS -->
+          <a
+            href="{% url 'quizzes:performance_dashboard' %}"
+            class="bento-card analytics-card"
+          >
+            <div class="bento-header">
+              <div class="bento-icon">
+                <i class="ri-bar-chart-grouped-line"></i>
+              </div>
+              <i class="ri-arrow-right-up-line bento-arrow"></i>
+            </div>
+            <h3>Performance Analytics</h3>
+            <p>Track your progress with detailed insights</p>
+          </a>
+
+          <!-- RECENT QUIZZES -->
+          <a
+            href="{% url 'quizzes:recent_quizzes' %}"
+            class="bento-card recent-card"
+          >
+            <div class="bento-header">
+              <div class="bento-icon">
+                <i class="ri-history-line"></i>
+              </div>
+              <span class="bento-badge">{{ recent_quizzes|length }}</span>
+            </div>
+            <h3>Recent Quizzes</h3>
+            <p>Review your latest attempts</p>
+          </a>
+
+          <!-- ATTEMPTS -->
+          <a
+            href="{% url 'quizzes:attempts_summary' %}"
+            class="bento-card attempts-card"
+          >
+            <div class="bento-header">
+              <div class="bento-icon">
+                <i class="ri-timer-line"></i>
+              </div>
+              <i class="ri-arrow-right-up-line bento-arrow"></i>
+            </div>
+            <h3>Attempts Summary</h3>
+            <p>Track your practice consistency</p>
+          </a>
+
+          <!-- LEADERBOARD - Spans 2 columns -->
+          <a
+            href="{% url 'quizzes:leaderboard' %}"
+            class="bento-card leaderboard-card bento-wide"
+          >
+            <div class="bento-header">
+              <div class="bento-icon">
+                <i class="ri-trophy-line"></i>
+              </div>
+              <i class="ri-arrow-right-up-line bento-arrow"></i>
+            </div>
+            <h3>Leaderboard</h3>
+            <p>Compete with top performers</p>
+            <div class="leaderboard-preview">
+              <div class="rank-badge rank-1">🥇</div>
+              <div class="rank-badge rank-2">🥈</div>
+              <div class="rank-badge rank-3">🥉</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Sidebar Toggle Functionality
+      const sidebar = document.getElementById("sidebar");
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const mainContent = document.querySelector(".main-content");
+
+      // Check for saved state
+      const sidebarCollapsed =
+        localStorage.getItem("sidebarCollapsed") === "true";
+      if (sidebarCollapsed) {
+        sidebar.classList.add("collapsed");
+        mainContent.classList.add("expanded");
+      }
+
+      sidebarToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        mainContent.classList.toggle("expanded");
+
+        // Save state to localStorage
+        localStorage.setItem(
+          "sidebarCollapsed",
+          sidebar.classList.contains("collapsed")
+        );
+      });
+    </script>
+  </body>
 </html>

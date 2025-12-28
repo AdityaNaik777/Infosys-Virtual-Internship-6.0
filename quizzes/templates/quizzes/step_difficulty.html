@@ -1,30 +1,278 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Select Difficulty</title>
-    <link rel="stylesheet" href="{% static 'quizzes/css/wizard.css' %}">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Select Difficulty - AI Quiz Hub</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet" />
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="{% static 'css/global.css' %}" />
+    
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0f1a 0%, #1a1f3a 50%, #0f1729 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .wizard-section {
+            position: relative;
+            z-index: 1;
+            padding: 3rem 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .wizard-container {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .wizard-step {
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #64748b;
+        }
+        
+        .wizard-step.completed {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-color: #fbbf24;
+            color: #0a0f1a;
+        }
+        
+        .wizard-step.active {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            border-color: #60a5fa;
+            color: white;
+            box-shadow: 0 8px 24px rgba(96, 165, 250, 0.4);
+        }
+        
+        .wizard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .wizard-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .wizard-subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        
+        .wizard-subtitle strong {
+            color: #60a5fa;
+        }
+        
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .difficulty-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        
+        .difficulty-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .difficulty-card.easy::before {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+        }
+        
+        .difficulty-card.medium::before {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15));
+        }
+        
+        .difficulty-card.hard::before {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+        }
+        
+        .difficulty-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+        }
+        
+        .difficulty-card:hover::before {
+            opacity: 1;
+        }
+        
+        .difficulty-card.easy:hover {
+            border-color: rgba(34, 197, 94, 0.6);
+            box-shadow: 0 20px 60px rgba(34, 197, 94, 0.3);
+        }
+        
+        .difficulty-card.medium:hover {
+            border-color: rgba(251, 191, 36, 0.6);
+            box-shadow: 0 20px 60px rgba(251, 191, 36, 0.3);
+        }
+        
+        .difficulty-card.hard:hover {
+            border-color: rgba(239, 68, 68, 0.6);
+            box-shadow: 0 20px 60px rgba(239, 68, 68, 0.3);
+        }
+        
+        .difficulty-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .difficulty-card.easy .difficulty-icon {
+            background: linear-gradient(135deg, #22c55e, #10b981);
+        }
+        
+        .difficulty-card.medium .difficulty-icon {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+        
+        .difficulty-card.hard .difficulty-icon {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .difficulty-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .difficulty-card.easy .difficulty-name {
+            color: #22c55e;
+        }
+        
+        .difficulty-card.medium .difficulty-name {
+            color: #fbbf24;
+        }
+        
+        .difficulty-card.hard .difficulty-name {
+            color: #ef4444;
+        }
+        
+        .difficulty-desc {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .wizard-title {
+                font-size: 2rem;
+            }
+            
+            .difficulty-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
 <body>
-<div class="wizard-container">
-
-    <div class="steps">
-        <div class="step completed">1. Category</div>
-        <div class="step completed">2. Subcategory</div>
-        <div class="step active">3. Difficulty</div>
-        <div class="step">4. Start</div>
-    </div>
-
-    <h2 class="wizard-title">Choose Difficulty</h2>
-    <p class="wizard-subtitle">Subcategory: <strong>{{ subcategory.name }}</strong></p>
-
-    <div class="difficulty-grid">
-        <a href="{% url 'quizzes:instructions' subcategory.id 'easy' %}" class="difficulty-btn easy">Easy</a>
-        <a href="{% url 'quizzes:instructions' subcategory.id 'medium' %}" class="difficulty-btn medium">Medium</a>
-        <a href="{% url 'quizzes:instructions' subcategory.id 'hard' %}" class="difficulty-btn hard">Hard</a>
-    </div>
-
-</div>
+    <div class="grid-bg"></div>
+    
+    <section class="wizard-section">
+        <div class="wizard-container">
+            <div class="wizard-steps">
+                <div class="wizard-step completed">1. Category</div>
+                <div class="wizard-step completed">2. Subcategory</div>
+                <div class="wizard-step active">3. Difficulty</div>
+                <div class="wizard-step">4. Start</div>
+            </div>
+            
+            <div class="wizard-header">
+                <h2 class="wizard-title">Choose Difficulty</h2>
+                <p class="wizard-subtitle">Subcategory: <strong>{{ subcategory.name }}</strong></p>
+            </div>
+            
+            <div class="difficulty-grid">
+                <a href="{% url 'quizzes:instructions' subcategory.id 'easy' %}" class="difficulty-card easy">
+                    <div class="difficulty-icon">🌱</div>
+                    <h3 class="difficulty-name">Easy</h3>
+                    <p class="difficulty-desc">Perfect for beginners</p>
+                </a>
+                
+                <a href="{% url 'quizzes:instructions' subcategory.id 'medium' %}" class="difficulty-card medium">
+                    <div class="difficulty-icon">⚡</div>
+                    <h3 class="difficulty-name">Medium</h3>
+                    <p class="difficulty-desc">Moderate challenge</p>
+                </a>
+                
+                <a href="{% url 'quizzes:instructions' subcategory.id 'hard' %}" class="difficulty-card hard">
+                    <div class="difficulty-icon">🔥</div>
+                    <h3 class="difficulty-name">Hard</h3>
+                    <p class="difficulty-desc">For advanced learners</p>
+                </a>
+            </div>
+        </div>
+    </section>
 </body>
 </html>

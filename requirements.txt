@@ -3,6 +3,5 @@ PyMySQL==1.1.1
 Pillow==10.4.0
 python-dotenv==1.0.1
 openai==1.47.0
-reportlab
-requests
-cryptography
+reportlab==4.2.5
+requests==2.32.3

@@ -27,7 +27,6 @@ urlpatterns = [
     path("attempt/<uuid:attempt_id>/submit/", views.submit_answer, name="submit_answer"),
     path("attempt/<uuid:attempt_id>/auto-submit/", views.auto_submit_quiz, name="auto_submit_quiz"),
     path("attempt/<uuid:attempt_id>/results/", views.quiz_results, name="quiz_results"),
-    path("categories/", views.category_list, name="categories"),
     # ============================================================
     # Performance & Analytics
     # ============================================================

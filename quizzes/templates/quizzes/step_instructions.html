@@ -1,42 +1,269 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Quiz Instructions</title>
-    <link rel="stylesheet" href="{% static 'quizzes/css/wizard.css' %}" />
-  </head>
-
-  <body>
-    <div class="wizard-container">
-      <div class="steps">
-        <div class="step completed">1. Category</div>
-        <div class="step completed">2. Subcategory</div>
-        <div class="step completed">3. Difficulty</div>
-        <div class="step active">4. Start</div>
-      </div>
-
-      <h2 class="wizard-title">Quiz Instructions</h2>
-
-      <div class="instruction-box">
-        <p>📌 <strong>Category:</strong> {{ subcategory.category.name }}</p>
-        <p>📌 <strong>Subcategory:</strong> {{ subcategory.name }}</p>
-        <p>📌 <strong>Difficulty:</strong> {{ difficulty|title }}</p>
-        <hr />
-        <ul>
-          <li>Each quiz contains 10 AI-generated questions.</li>
-          <li>
-            Timer starts immediately after clicking <strong>Start Quiz</strong>.
-          </li>
-          <li>You cannot go back once a question is answered.</li>
-        </ul>
-      </div>
-
-      <a
-        href="{% url 'quizzes:start_quiz' subcategory.id difficulty %}"
-        class="start-btn"
-      >
-        🚀 Start Quiz
-      </a>
-    </div>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quiz Instructions - AI Quiz Hub</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet" />
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="{% static 'css/global.css' %}" />
+    
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0f1a 0%, #1a1f3a 50%, #0f1729 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .wizard-section {
+            position: relative;
+            z-index: 1;
+            padding: 3rem 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .wizard-container {
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .wizard-step {
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #64748b;
+        }
+        
+        .wizard-step.completed {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-color: #fbbf24;
+            color: #0a0f1a;
+        }
+        
+        .wizard-step.active {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            border-color: #60a5fa;
+            color: white;
+            box-shadow: 0 8px 24px rgba(96, 165, 250, 0.4);
+        }
+        
+        .wizard-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        
+        .wizard-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        .instruction-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+        
+        .quiz-meta {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        
+        .meta-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .meta-item strong {
+            color: white;
+            margin-left: 0.25rem;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            margin: 1.5rem 0;
+        }
+        
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .instructions-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            color: #94a3b8;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .start-btn {
+            display: block;
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0a0f1a;
+            text-decoration: none;
+            border-radius: 1rem;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+            transition: all 0.3s;
+            border: none;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.4);
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(251, 191, 36, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .wizard-title {
+                font-size: 2rem;
+            }
+            
+            .instruction-box {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <section class="wizard-section">
+        <div class="wizard-container">
+            <div class="wizard-steps">
+                <div class="wizard-step completed">1. Category</div>
+                <div class="wizard-step completed">2. Subcategory</div>
+                <div class="wizard-step completed">3. Difficulty</div>
+                <div class="wizard-step active">4. Start</div>
+            </div>
+            
+            <div class="wizard-header">
+                <h2 class="wizard-title">Quiz Instructions</h2>
+            </div>
+            
+            <div class="instruction-box">
+                <div class="quiz-meta">
+                    <div class="meta-item">
+                        <div class="meta-icon">📚</div>
+                        <span><strong>Category:</strong> {{ subcategory.category.name }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon">📖</div>
+                        <span><strong>Subcategory:</strong> {{ subcategory.name }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon">⚡</div>
+                        <span><strong>Difficulty:</strong> {{ difficulty|title }}</span>
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <ul class="instructions-list">
+                    <li>
+                        <div class="check-icon">
+                            <i class="ri-check-line" style="color: white; font-size: 1rem;"></i>
+                        </div>
+                        <span>Each quiz contains 10 AI-generated questions.</span>
+                    </li>
+                    <li>
+                        <div class="check-icon">
+                            <i class="ri-check-line" style="color: white; font-size: 1rem;"></i>
+                        </div>
+                        <span>Timer starts immediately after clicking <strong>Start Quiz</strong>.</span>
+                    </li>
+                    <li>
+                        <div class="check-icon">
+                            <i class="ri-check-line" style="color: white; font-size: 1rem;"></i>
+                        </div>
+                        <span>You cannot go back once a question is answered.</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <a href="{% url 'quizzes:start_quiz' subcategory.id difficulty %}" class="start-btn">
+                🚀 Start Quiz
+            </a>
+        </div>
+    </section>
+</body>
 </html>

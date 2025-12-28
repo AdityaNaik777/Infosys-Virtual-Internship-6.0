@@ -122,31 +122,213 @@
         color: #cbd5e1;
         padding: 18px 0;
       }
+
+      /* ===== MOBILE RESPONSIVE STYLES ===== */
+      
+      /* Mobile Navigation */
+      @media (max-width: 991.98px) {
+        .navbar {
+          padding: 0.75rem 1rem;
+        }
+        
+        .navbar-brand {
+          font-size: 1.25rem;
+        }
+        
+        .navbar-nav {
+          padding: 1rem 0;
+          gap: 0.5rem;
+        }
+        
+        .navbar-nav .nav-link {
+          padding: 0.75rem 1rem;
+          border-radius: 0.5rem;
+        }
+        
+        .navbar-nav .nav-link:hover {
+          background: rgba(37, 99, 235, 0.1);
+        }
+        
+        .navbar-nav .btn {
+          width: 100%;
+          margin-top: 0.5rem;
+          margin-left: 0 !important;
+        }
+      }
+      
+      /* Small Mobile Devices (< 576px) */
+      @media (max-width: 575.98px) {
+        .hero-section {
+          padding: 40px 0;
+        }
+        
+        .hero-title {
+          font-size: 1.75rem;
+          line-height: 1.2;
+          text-align: center;
+        }
+        
+        .hero-text {
+          font-size: 0.95rem;
+          text-align: center;
+          padding: 0 0.5rem;
+        }
+        
+        /* Center buttons on mobile */
+        .hero-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          align-items: center;
+        }
+        
+        .hero-buttons .btn {
+          width: 100%;
+          max-width: 280px;
+          margin-left: 0 !important;
+        }
+        
+        /* Stats section mobile */
+        .stats-section {
+          justify-content: center !important;
+          gap: 2rem !important;
+          flex-wrap: wrap;
+        }
+        
+        .stats-section > div {
+          text-align: center;
+          min-width: 120px;
+        }
+        
+        .counter {
+          font-size: 1.4rem;
+        }
+        
+        /* Lottie animation mobile */
+        #hero-lottie {
+          width: 280px !important;
+          height: 280px !important;
+        }
+        
+        /* How it works section */
+        #how .row > div {
+          margin-bottom: 1.5rem;
+        }
+        
+        #how h1 {
+          font-size: 2rem;
+        }
+        
+        #how p {
+          font-size: 0.9rem;
+        }
+        
+        /* Footer mobile */
+        footer {
+          padding: 1rem;
+        }
+        
+        footer p {
+          font-size: 0.85rem;
+        }
+      }
+      
+      /* Medium Mobile Devices (576px - 768px) */
+      @media (min-width: 576px) and (max-width: 767.98px) {
+        .hero-title {
+          font-size: 2rem;
+          text-align: center;
+        }
+        
+        .hero-text {
+          text-align: center;
+        }
+        
+        .hero-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+        }
+        
+        .stats-section {
+          justify-content: center !important;
+        }
+        
+        #hero-lottie {
+          width: 320px !important;
+          height: 320px !important;
+        }
+      }
+      
+      /* Tablet Devices (768px - 991px) */
+      @media (min-width: 768px) and (max-width: 991.98px) {
+        .hero-title {
+          font-size: 2.2rem;
+        }
+        
+        #hero-lottie {
+          width: 360px !important;
+          height: 360px !important;
+        }
+      }
+      
+      /* Ensure proper container padding on mobile */
+      @media (max-width: 767.98px) {
+        .container {
+          padding-left: 1.25rem;
+          padding-right: 1.25rem;
+        }
+        
+        section.py-5 {
+          padding-top: 2rem !important;
+          padding-bottom: 2rem !important;
+        }
+        
+        /* Hide lord-icon on very small screens */
+        lord-icon {
+          display: none;
+        }
+        
+        /* Adjust column order on mobile - text first */
+        .col-md-6:first-child {
+          order: 1;
+        }
+        
+        .col-md-6:last-child {
+          order: 2;
+        }
+      }
     </style>
   </head>
   <body>
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
       <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="#">AI Quiz Hub</a>
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="#">
+          <span style="font-size: 1.5rem;">🧠</span>
+          <span>AI Quiz Hub</span>
+        </a>
         <button
-          class="navbar-toggler"
+          class="navbar-toggler border-0"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navMenu"
+          aria-controls="navMenu"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
             <li class="nav-item">
-              <a class="nav-link" href="#features">Features</a>
+              <a class="nav-link px-3" href="#features">Features</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#how">How it works</a>
+              <a class="nav-link px-3" href="#how">How it works</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+              <a class="nav-link px-3" href="{% url 'accounts:login' %}">Login</a>
             </li>
             <li class="nav-item">
               <a
@@ -164,25 +346,33 @@
     {% include "core/hero.html" %}
 
     <!-- HOW IT WORKS -->
-    <section id="how" class="py-5">
+    <section id="how" class="py-5 bg-light">
       <div class="container text-center">
-        <h2 class="fw-bold mb-5">How It Works</h2>
-        <div class="row g-4">
-          <div class="col-md-3">
-            <h1>1️⃣</h1>
-            <p>Select category and difficulty</p>
+        <h2 class="fw-bold mb-4 mb-md-5">How It Works</h2>
+        <div class="row g-4 justify-content-center">
+          <div class="col-6 col-md-3">
+            <div class="p-3">
+              <h1 class="mb-2">1️⃣</h1>
+              <p class="mb-0 small">Select category and difficulty</p>
+            </div>
           </div>
-          <div class="col-md-3">
-            <h1>2️⃣</h1>
-            <p>AI generates questions instantly</p>
+          <div class="col-6 col-md-3">
+            <div class="p-3">
+              <h1 class="mb-2">2️⃣</h1>
+              <p class="mb-0 small">AI generates questions instantly</p>
+            </div>
           </div>
-          <div class="col-md-3">
-            <h1>3️⃣</h1>
-            <p>Attempt quiz with timer</p>
+          <div class="col-6 col-md-3">
+            <div class="p-3">
+              <h1 class="mb-2">3️⃣</h1>
+              <p class="mb-0 small">Attempt quiz with timer</p>
+            </div>
           </div>
-          <div class="col-md-3">
-            <h1>4️⃣</h1>
-            <p>View score + AI explanations</p>
+          <div class="col-6 col-md-3">
+            <div class="p-3">
+              <h1 class="mb-2">4️⃣</h1>
+              <p class="mb-0 small">View score + AI explanations</p>
+            </div>
           </div>
         </div>
       </div>

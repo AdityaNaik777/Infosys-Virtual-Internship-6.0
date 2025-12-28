@@ -87,72 +87,6 @@ def dashboard(request):
     }
     return render(request, "quizzes/dashboard.html", context)
 
-# ============================================================
-# DEPRECATED: OLD MULTI-PAGE CATEGORY SELECTION VIEWS
-# These views are replaced by the SPA in views_spa.py
-# Kept for backwards compatibility but no longer routed
-# ============================================================
-
-# @deprecated - Replaced by views_spa.quiz_selector_view
-def category_list(request):
-    """
-    [DEPRECATED] Show top-level Category rows.
-    This was the old multi-page flow. Now replaced by SPA at /quiz/select/
-    """
-    categories = Category.objects.all()
-    return render(request, "quizzes/category_list.html", {
-        "categories": categories,
-        "debug_count": categories.count(),
-    })
-
-
-# @deprecated - Replaced by views_spa.get_children_ajax  
-def choose_subcategory(request, category_id):
-    """
-    [DEPRECATED] Show level-1 subcategories for a category.
-    This was the old multi-page flow. Now replaced by SPA AJAX.
-    """
-    category = get_object_or_404(Category, id=category_id)
-    level1_subs = SubCategory.objects.filter(category=category, parent_subcat__isnull=True).order_by('name')
-    return render(request, "quizzes/step_subcategories.html", {
-        "category": category,
-        "subcategories": level1_subs,
-        "debug_count": level1_subs.count(),
-    })
-
-
-# @deprecated - Replaced by views_spa.get_children_ajax
-def subcategory_children(request, sub_id):
-    """
-    [DEPRECATED] List children of a subcategory.
-    This was the old multi-page flow. Now replaced by SPA AJAX.
-    """
-    parent = get_object_or_404(SubCategory, id=sub_id)
-    children = SubCategory.objects.filter(parent_subcat=parent).order_by('name')
-    if not children.exists():
-        return redirect('quizzes:choose_difficulty', subcategory_id=parent.id)
-    return render(request, "quizzes/child_subcategories.html", {
-        "parent": parent,
-        "children": children,
-        "debug_count": children.count(),
-    })
-
-
-# @deprecated - Replaced by SPA difficulty selection in quiz_selector.html
-def choose_difficulty(request, subcategory_id):
-    """
-    [DEPRECATED] Show difficulty options.
-    This was the old multi-page flow. Now handled in SPA.
-    """
-    subcategory = get_object_or_404(SubCategory, id=subcategory_id)
-    if not subcategory.is_leaf:
-        children = SubCategory.objects.filter(parent_subcat=subcategory)
-        if children.exists():
-            return redirect('quizzes:subcategory_children', sub_id=subcategory.id)
-    return render(request, "quizzes/step_difficulty.html", {
-        "subcategory": subcategory
-    })
-
 
 # ============================================================
 # STEP 4 — INSTRUCTIONS BEFORE START
@@ -1154,7 +1088,7 @@ def leaderboard(request):
             avg_score=Avg('score'),
             quizzes_attempted=Count('id')
         )
-        .filter(quizzes_attempted__gte=3)  # minimum attempts
+        .filter(quizzes_attempted__gte=1)  # minimum 1 attempt to appear
         .order_by('-avg_score', '-quizzes_attempted')[:20]
     )
 

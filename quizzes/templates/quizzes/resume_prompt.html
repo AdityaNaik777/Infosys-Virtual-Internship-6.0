@@ -1,45 +1,288 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Resume Quiz</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Quiz — AI Quiz Hub</title>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-  <div class="bg-white shadow-lg rounded-lg max-w-md w-full p-6">
-    
-    <h2 class="text-xl font-semibold text-gray-800 mb-3">
-      Unfinished Quiz Found
-    </h2>
+    <!-- Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
 
-    <p class="text-gray-600 mb-4">
-      You have an unfinished quiz. Would you like to continue where you left off
-      or quit and start a new one?
-    </p>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    <div class="bg-gray-50 rounded-md p-4 mb-5 text-sm text-gray-700">
-      <p><strong>Category:</strong> {{ quiz.category.name }}</p>
-      <p><strong>Topic:</strong> {{ quiz.subcategory.name }}</p>
-      <p><strong>Progress:</strong>
-        {{ quiz.current_question_index }} / {{ quiz.total_questions }}
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #0f172a;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: #e2e8f0;
+        position: relative;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: 
+          linear-gradient(135deg, #0a1628 0%, #0f172a 50%, #1e293b 100%),
+          radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 40%),
+          radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.08) 0%, transparent 40%);
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      /* Card */
+      .resume-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.5rem;
+        max-width: 480px;
+        width: 100%;
+        padding: 2.5rem;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        animation: slideUp 0.5s ease forwards;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Icon */
+      .resume-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(245, 158, 11, 0.1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .resume-icon i {
+        font-size: 2rem;
+        color: #fbbf24;
+      }
+
+      /* Title */
+      h2 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.75rem;
+      }
+
+      .subtitle {
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+      }
+
+      /* Quiz Info */
+      .quiz-info {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+      }
+
+      .info-label {
+        color: #94a3b8;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .info-label i {
+        color: #fbbf24;
+      }
+
+      .info-value {
+        color: white;
+        font-weight: 600;
+      }
+
+      /* Progress */
+      .progress-wrap {
+        margin-top: 0.75rem;
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        border-radius: 999px;
+      }
+
+      .progress-text {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-align: right;
+      }
+
+      /* Buttons */
+      .buttons {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 1rem;
+        border-radius: 0.875rem;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #0f172a;
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(245, 158, 11, 0.5);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+      }
+
+      /* Responsive */
+      @media (max-width: 480px) {
+        body {
+          padding: 1rem;
+        }
+
+        .resume-card {
+          padding: 1.5rem;
+        }
+
+        .buttons {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="resume-card">
+      <div class="resume-icon">
+        <i class="ri-pause-circle-line"></i>
+      </div>
+
+      <h2>Unfinished Quiz Found</h2>
+      <p class="subtitle">
+        You have an unfinished quiz. Would you like to continue where you left off
+        or quit and start a new one?
       </p>
+
+      <div class="quiz-info">
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ri-folder-line"></i>
+            Category
+          </span>
+          <span class="info-value">{{ quiz.category.name }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ri-bookmark-line"></i>
+            Topic
+          </span>
+          <span class="info-value">{{ quiz.subcategory.name }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ri-bar-chart-line"></i>
+            Progress
+          </span>
+          <span class="info-value">{{ quiz.current_question_index }} / {{ quiz.total_questions }}</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {% widthratio quiz.current_question_index quiz.total_questions 100 %}%;"></div>
+          </div>
+          <div class="progress-text">{% widthratio quiz.current_question_index quiz.total_questions 100 %}% complete</div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <a href="{% url 'quizzes:resume_quiz' quiz.id %}" class="btn btn-primary">
+          <i class="ri-play-line"></i>
+          Resume Quiz
+        </a>
+        <a href="{% url 'quizzes:quit_quiz' quiz.id %}" class="btn btn-secondary">
+          <i class="ri-close-line"></i>
+          Quit & End
+        </a>
+      </div>
     </div>
-
-    <div class="flex gap-3">
-      <a href="{% url 'quizzes:resume_quiz' quiz.id %}"
-         class="flex-1 text-center bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition">
-        Resume Quiz
-      </a>
-
-      <a href="{% url 'quizzes:quit_quiz' quiz.id %}"
-         class="flex-1 text-center bg-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-400 transition">
-        Quit & End
-      </a>
-    </div>
-
-  </div>
-
-</body>
+  </body>
 </html>

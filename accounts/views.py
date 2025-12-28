@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
+from django.urls import reverse_lazy
 
 from .forms import RegistrationForm, UserUpdateForm
 
@@ -45,8 +46,7 @@ class CustomLoginView(LoginView):
 
     # override success URL
     def get_success_url(self):
-        return redirect('quizzes:dashboard').url
-
+         return reverse_lazy('quizzes:dashboard')
 
 # ---------------------------
 # PROFILE PAGE (User model only — no UserProfile)
@@ -74,8 +74,7 @@ def profile_view(request):
 # ---------------------------
 # LOGOUT
 # ---------------------------
-@login_required
 def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out.")
-    return redirect('accounts:login')
+    return redirect('home')
